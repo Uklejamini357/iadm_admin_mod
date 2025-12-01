@@ -3,7 +3,7 @@ util.AddNetworkString("iadm_printmsg")
 util.AddNetworkString("iadm_csay")
 util.AddNetworkString("iadm_playerusecmd")
 
-net.Receive("iadm_command", function(len, ply)
+net.Receive("iadm_command", function(len, pl)
     local cmd = net.ReadString()
     local args = net.ReadTable()
 	
@@ -20,9 +20,9 @@ net.Receive("iadm_command", function(len, ply)
     end
 	
     if ctbl.ChatArg then
-	    ctbl.Func(ply, false, args)
+	    ctbl.Func(pl, false, args)
     else
-    	ctbl.Func(ply, args)
+    	ctbl.Func(pl, args)
     end
 end)
 

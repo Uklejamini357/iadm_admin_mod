@@ -7,7 +7,7 @@ if not IADM then
     IADM.Modules = {}
     IADM.Hooks = {}
     IADM.Prefix = "!"
-    IADM.Version = "0.0"
+    IADM.Version = "0.1"
     IADM.Author = "Uklejamini"
     IADM.DatabaseDir = "iadm"
 end
