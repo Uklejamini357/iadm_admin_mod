@@ -2,7 +2,8 @@
 ## Greatly Enhance your server management experience
 
 A very powerful, independent from ULX and open-source administration tool designed for Garry's Mod servers.<br>
-Project begun in 29th November 2025.
+This addon aims to provide a great experience for managing servers with a new admin mod.<br>
+Development begun in 29th November 2025.
 
 #### Abbreviations:
 > NYI: Not yet implemented<br>
@@ -59,12 +60,25 @@ Absolutely not. I have no intentions, nor any plans to make IADM a paid mod, as 
 
 
 # Roadmap for IADM:
-- Basic commands functionality (DONE)
-- Set up first commands (DONE)
-- Execute commands via sending in chat (DONE)
-- Restrict certain commands to admin only and override ply:IsAdmin() ply:IsSuperAdmin()
+v0.1: (DONE)
+- Basic commands functionality
+- Set up first commands
+- Execute commands via sending in chat
+- Restrict admin commands to admins only
 
-- Add database management
-- Add config file, and potentially add more customization to it
-- And More...
+v0.2: (DONE)
+- Fix stuffs
+- Add some commands
+- Make some changes
 
+v0.3: (CURRENT)
+- Add SQL database
+- Add UserGroups management
+- Override ply:IsAdmin() and ply:IsSuperAdmin() functions
+- Make lower ranked players unable to target commands on higher ranked players
+- Add OverrideCanTarget and CanTarget extensive functionality
+- Implement more commands
+
+v0.4:
+- Add logging system
+- Make addon more configurable with

@@ -1,4 +1,3 @@
-local col_purple = Color(138, 97, 226)
 net.Receive("iadm_printmsg", function(len)
     local prefix = net.ReadBit() == 1
     local printtochat = net.ReadBit() == 1
@@ -6,13 +5,13 @@ net.Receive("iadm_printmsg", function(len)
 
     if printtochat then
         if prefix then
-            chat.AddText(col_purple, "[IADM] ", color_white, unpack(tbl))
+            chat.AddText(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, unpack(tbl))
         else
             chat.AddText(unpack(tbl))
         end
     else
         if prefix then
-            MsgC(col_purple, "[IADM] ", color_white)
+            MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white)
         end
         MsgC(unpack(tbl))
         MsgN() -- DO NOT DELETE - this line is required cuz adding "\n" after MsgC unpacked varargs fucks it up

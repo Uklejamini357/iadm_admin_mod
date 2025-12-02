@@ -1,3 +1,6 @@
+AddCSLuaFile("iadm/globals.lua")
+include("iadm/globals.lua")
+
 AddCSLuaFile("iadm/init.lua")
 include("iadm/init.lua")
 

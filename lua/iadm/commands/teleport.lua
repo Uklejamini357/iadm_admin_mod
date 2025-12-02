@@ -18,4 +18,4 @@ cmd.Name = "Teleport"
 cmd.Desc = "Teleports the player to where you are looking."
 cmd.Aliases = {"tp", "tele"}
 cmd.PermsRequire = "admin"
-cmd:AddArgument({type="PlrArg", default="^"})
+cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
