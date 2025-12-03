@@ -7,7 +7,7 @@ if not IADM then
     IADM.Modules = {}
     IADM.Hooks = {}
     IADM.Prefix = "!"
-    IADM.Version = "0.0"
+    IADM.Version = "0.1.1"
     IADM.Author = "Uklejamini"
     IADM.DatabaseDir = "iadm"
 end
@@ -50,19 +50,20 @@ function IADM:Message(ply, chat, ...)
             net.WriteTable({...})
             net.Send(ply)
         else
-            MsgC(..., "\n")
+            MsgC(...)
+            MsgN()
         end
     elseif CLIENT then
         if chat then
             chat.AddText(...)
         else
-            MsgC(..., "\n")
+            MsgC(...)
+            MsgN()
         end
     end
 end
 
 function IADM:MessageWPrefix(ply, chat, ...)
-    local col_purple = Color(138, 97, 226)
     if SERVER then
         if istable(ply) or ply:IsValid() then
             net.Start("iadm_printmsg")
@@ -71,14 +72,14 @@ function IADM:MessageWPrefix(ply, chat, ...)
             net.WriteTable({...})
             net.Send(ply)
         else
-            MsgC(col_purple, "[IADM] ", color_white, ...)
+            MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
             MsgN()
         end
     elseif CLIENT then
         if chat then
-            chat.AddText(col_purple, "[IADM] ", color_white, ...)
+            chat.AddText(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
         else
-            MsgC(col_purple, "[IADM] ", color_white, ...)
+            MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
             MsgN()
         end
     end
@@ -101,14 +102,19 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
         if !carg then break end
         if carg.varargs then
             for i=count+1,#args do
-                print(i, a)
                 args[count] = args[count].." "..args[i]
             end
+
+            if args[count] == "" then
+                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "String cannot be empty!")
+                return
+            end
+
             break
         end
         local a = args[count]
 
-        if carg.type == "PlrArg" then
+        if carg.type == IADM_ARGTYPE_PLR then
             if a == "^" then
                 a = pl
             elseif a == "@" then
@@ -132,7 +138,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                         local nick = tbl[i]:Nick()
                         s=s..(i == 1 and nick or ", "..nick)
                     end
-                    IADM:Message(pl, inchat, Color(255,0,0), "Arg #", Color(255,160,0), count, Color(255,0,0), " error: ",
+                    IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ",
                     Color(255,128,0), Format("Too many players (%d) to select from! ", #tbl), Color(255,255,0), "Select from:\n",
                     Color(255,128,0), s)
                     return
@@ -142,12 +148,12 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if isstring(a) or !IsValid(a) or !a:IsPlayer() then
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", Color(255,160,0), count, Color(255,0,0), " error: ", Color(255,128,0), "Player not found!")
+                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Player not found!")
                 return
             end
 
             args[count] = a
-        elseif carg.type == "EntsArg" then
+        elseif carg.type == IADM_ARGTYPE_ENTS then
             if a == "^" then
                 a = {pl}
             elseif a == "@" then
@@ -169,12 +175,12 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if isstring(a) or !istable(a) and !IsValid(a) then
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", Color(255,160,0), count, Color(255,0,0), " error: ", Color(255,128,0), "Could not find an entity!")
+                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Could not find an entity!")
                 return
             end
 
             args[count] = a
-        elseif carg.type == "NumArg" then
+        elseif carg.type == IADM_ARGTYPE_NUM then
             a = tonumber(a)
             if a then
                 if carg.min then
@@ -185,10 +191,15 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                     math.min(carg.max, a)
                 end
             else
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", Color(255,160,0), count, Color(255,0,0), " error: ", Color(255,128,0), "Invalid number!")
+                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Invalid number!")
                 return
             end
             args[count] = a
+        elseif carg.type == IADM_ARGTYPE_STR then
+            if a == "" then
+                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "String cannot be empty!")
+                return
+            end
         end
     end
 
@@ -214,10 +225,8 @@ end
 concommand.Add("iadm", function(pl, cmd, args, str)
     local prefix = "[IADM] "
     local maincol = Color(147, 107, 226)
-    local col1 = Color(127, 207, 126)
-    local col2 = Color(83, 234, 196)
     if #args == 0 then
-        MsgC(maincol, prefix, col1, "No command selected. Currently available commands: ", col2, table.Count(IADM.Commands), "\n")
+        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, table.Count(IADM.Commands), "\n")
         return
     end
 
@@ -234,11 +243,11 @@ concommand.Add("iadm", function(pl, cmd, args, str)
     if !ctbl then
         for k,_ in SortedPairs(IADM.Commands) do
             if string.sub(k, 1, #cmd) ~= cmd then continue end
-            MsgC(maincol, prefix, col1, "Invalid command ", col2, cmd, col1, ". Maybe you meant: ", col2, k, col1, "?\n")
+            MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?\n")
             return
         end
 
-        MsgC(maincol, prefix, col1, "Invalid command ", col2, cmd, col1, ".\n")
+        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".\n")
         return
     end
 
@@ -252,29 +261,28 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
     local inchat = false
     local needed = #ctbl.Args
-    local needed_default = #ctbl.Args
-    local defaultargsamt = #ctbl.Args
+    local defaultargsamt = 0
     for count,argument in ipairs(ctbl.Args) do
         needed = needed - ((argument.default or argument.optional or args[count]) and 1 or 0)
-        needed_default = needed_default - ((argument.default or argument.optional) and 1 or 0)
+        defaultargsamt = defaultargsamt + ((argument.default or argument.optional) and 1 or 0)
     end
 
-    if #ctbl.Args ~= 0 and #ctbl.Args-needed_default == needed then
+    if #ctbl.Args ~= 0 and #ctbl.Args-defaultargsamt == needed and needed ~= 0 then
         local s = ""
         for count,arg in pairs(ctbl.Args) do
-            if arg.type == "StrArg" then
+            if arg.type == IADM_ARGTYPE_STR then
                 s = s..((arg.optional and string.format("[%s]", arg.hint or "text") or string.format("<%s>", arg.hint or "text")))
-            elseif arg.type == "NumArg" then
+            elseif arg.type == IADM_ARGTYPE_NUM then
                 s = s..((arg.optional and string.format("[%s]", arg.hint or "number") or string.format("<%s>", arg.hint or "text")))
             end
         end
 
-        MsgC(maincol, prefix, col1, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
-        col2, ctbl.Desc or "",
-        col2, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM.Prefix, cmd, s) or "", "\n")
+        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
+        IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
+        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM.Prefix, cmd, s) or "", "\n")
         return
     elseif needed ~= 0 then
-        MsgC(maincol, prefix, col1, "Not enough arguments provided!", "\n")
+        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!", "\n")
         return
     end
 
@@ -292,15 +300,14 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
     elseif SERVER then
         if !IADM:CanUseCommand(pl, cmd) then
-            local col_error = Color(255,0,0)
-            IADM:Message(pl, true, col_error, "Insufficient permissions! Need ", Color(255,160,0), ctbl.PermsRequire, col_error, " rank!")
+            IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions! Need ", IADM_ECHOCOLOR_ERROR_ARGVAR, ctbl.PermsRequire, IADM_ECHOCOLOR_ERROR, " rank!")
             pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
             return ""
         end
 
         args = IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
 
-        if !args then return end
+        if !args or (#ctbl.Args ~= 0 and defaultargsamt ~= 0 and needed ~= 0) then return end
 
         if ctbl.ChatArg then
             ctbl.Func(pl, false, unpack(args))
@@ -331,10 +338,10 @@ end, function(cmd, argstr, args)
 
             if arg then
                 -- s = s..arg
-                if carg.type == "StrArg" then
+                if carg.type == IADM_ARGTYPE_STR then
                     s = s..arg
                     table.insert(t, str..s)
-                elseif carg.type == "PlrArg" then
+                elseif carg.type == IADM_ARGTYPE_PLR then
                     for _,ply in pairs(player.GetAll()) do
                         if string.find(string_lower(ply:Nick()), string_lower(arg)) then
                             table.insert(t, str..s..(string.format("\"%s\"", ply:Nick())))
@@ -343,11 +350,11 @@ end, function(cmd, argstr, args)
                     break
                 end
             else
-                if carg.type == "StrArg" then
+                if carg.type == IADM_ARGTYPE_STR then
                     s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or "text") or string.format("<%s>", carg.hint or "text"))))
                     table.insert(t, str..s)
                     break
-                elseif carg.type == "PlrArg" then
+                elseif carg.type == IADM_ARGTYPE_PLR then
                     for _,ply in pairs(player.GetAll()) do
                         table.insert(t, str..s..(string.format("\"%s\"", ply:Nick())))
                     end
@@ -374,6 +381,7 @@ concommand.Add("iadm_changelogs", function(pl)
     local col_add = Color(155, 244, 110)
     local col_del = Color(244, 54, 44)
     local col_warn = Color(255, 0, 0)
+    local col_fix = Color(86, 209, 239)
     local change_notes = [[Initial Release - v0.1
 + Basic commands functionality
 + Basic permissions command check system
@@ -381,7 +389,19 @@ concommand.Add("iadm_changelogs", function(pl)
 + Usable commands from chat
 
 ! There is no database nor any kind of usergroup management yet.
-! This will be added in v0.2 release.]]
+! This will be added in v0.2 release.
+
+# HOTFIX 1 (#2):
+* Fix errors for commands not being executed if received net message for using command from client
+* Fix the version
+
+# Update v0.2 (#3):
++ Added 4 new commands: hp, entinfo, restart, map
++ Added globals
+
+* Vastly improved
+
+]]
 
     local tbl = {}
     for i,v in pairs(string.Explode("\n", change_notes)) do
@@ -391,6 +411,8 @@ concommand.Add("iadm_changelogs", function(pl)
             tbl[i] = {col_del, v.."\n"}
         elseif string.sub(v, 1, 1) == "!" then
             tbl[i] = {col_warn, v.."\n"}
+        elseif string.sub(v, 1, 1) == "*" then
+            tbl[i] = {col_fix, v.."\n"}
         else
             tbl[i] = {color_white, v.."\n"}
         end
