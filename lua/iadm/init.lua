@@ -7,7 +7,7 @@ if not IADM then
     IADM.Modules = {}
     IADM.Hooks = {}
     IADM.Prefix = "!"
-    IADM.Version = "0.1.1"
+    IADM.Version = "0.2"
     IADM.Author = "Uklejamini"
     IADM.DatabaseDir = "iadm"
 end
@@ -389,7 +389,7 @@ concommand.Add("iadm_changelogs", function(pl)
 + Usable commands from chat
 
 ! There is no database nor any kind of usergroup management yet.
-! This will be added in v0.2 release.
+! This will be added in v0.3 release.
 
 # HOTFIX 1 (#2):
 * Fix errors for commands not being executed if received net message for using command from client
@@ -399,8 +399,10 @@ concommand.Add("iadm_changelogs", function(pl)
 + Added 4 new commands: hp, entinfo, restart, map
 + Added globals
 
-* Vastly improved
+* Vastly improved and fixed command usages via console and chat
 
+v0.2 hotfix 1 (#4):
+* Fixed version
 ]]
 
     local tbl = {}
