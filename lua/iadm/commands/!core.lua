@@ -27,7 +27,7 @@ local cmd = IADM:AddCommand("help", function(caller, chat, cmd)
 
     IADM:MessageWPrefix(caller, chat, IADM_ECHOCOLOR_TEXT, "# "..(c.Name or cmd)..(c.Name and " ("..cmd..")" or "").."\n",
     IADM_ECHOCOLOR_ARG1, c.Desc or "",
-    IADM_ECHOCOLOR_ARG1, c.Help and string.format("\nUsage: %s%s %s", IADM.Prefix, cmd, s) or "")
+    IADM_ECHOCOLOR_ARG1, c.Help and string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s) or "")
 end)
 cmd.Name = "Help"
 cmd.Desc = "Understand the function of the command better."
@@ -38,10 +38,11 @@ cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="command", optional=true})
 
 local gm = engine.ActiveGamemode()
 local cmd = IADM:AddCommand("status", function(caller, chat)
-    local col = Color(176, 237, 92)
+    local col = IADM_ECHOCOLOR_TEXT
     local uptime, realtime = SysTime(), UnPredictedCurTime()
     local players = allplys()
     local admins = 0
+    local bots = #player.GetBots()
     local maxplayers = game.MaxPlayers()
 
     for _,ply in pairs(players) do
@@ -50,11 +51,14 @@ local cmd = IADM:AddCommand("status", function(caller, chat)
         end
     end
 
-
     IADM:Message(caller, chat, col, "--- SERVER STATUS ---")
     IADM:Message(caller, chat, col, string.format("Uptime: %02d:%02d:%02d:%02d", (uptime/86400), (uptime/3600)%24, (uptime/60)%60, uptime%60), " ",
     string.format("(%02d:%02d:%02d:%02d on a current map)", (realtime/86400), (realtime/3600)%24, (realtime/60)%60, realtime%60))
-    IADM:Message(caller, chat, col, string.format("Players: %d/%d (%d admin%s online)", #players, maxplayers, admins, admins ~= 1 and "s" or ""))
+    IADM:Message(caller, chat, col, string.format("Players: %d/%d%s", #players, maxplayers,
+    (admins ~= 0 or bots ~= 0) and string.format(" (%s%s)",
+    admins ~= 0 and string.format("%d admin%s"..(bots == 0 and " online" or ","), admins, admins ~= 1 and "s" or "") or "",
+    bots ~= 0 and string.format((admins == 0 and "" or " ").."%d bot%s online", bots, bots ~= 1 and "s" or "") or ""))
+    or "")
     IADM:Message(caller, chat, col, string.format("Map: %s", game.GetMap()))
     IADM:Message(caller, chat, col, string.format("Gamemode: %s (%s)", GAMEMODE.Name or "Unknown", gm))
 end)

@@ -6,7 +6,7 @@ MODULE.ID = "hookutils"
 MODULE.Name = MODULE_NAME
 MODULE.Required = true
 
--- if !MODULE_INCLUDE then return end
+if !IADM_MODULE_SHOULDINCLUDE then return end
 AddCSLuaFile()
 
 IADM:AddHook("PhysgunPickup", "PlayerPickup", function(pl, ent)

@@ -1,16 +1,19 @@
-local init = IADM
-
 if not IADM then
     IADM = {}
     IADM.Commands = {}
     IADM.Config = {}
     IADM.Modules = {}
     IADM.Hooks = {}
-    IADM.Prefix = "!"
-    IADM.Version = "0.2"
-    IADM.Author = "Uklejamini"
+    IADM.SQLDatabases = {}
+
+    IADM.BannedPlayers = {}
     IADM.DatabaseDir = "iadm"
 end
+
+IADM.Prefix = {"!", "/"}
+IADM.Version = "0.3 beta 1"
+IADM.Author = "Uklejamini"
+
 local IADM = IADM
 local string_lower = string.lower
 
@@ -39,6 +42,27 @@ function IADM:AddCommand(cmd, func, t)
     table.Merge(IADM.Commands[cmd], t or {})
 
     return IADM.Commands[cmd]
+end
+
+function IADM:AddConfig(id, name, category, configtype, default, desc)
+    id = string_lower(id)
+
+    IADM.Config[category] = {}
+    IADM.Config[category][name] = {}
+    local tbl = IADM.Config[category][name]
+
+    tbl.category = category
+    tbl.desc = desc
+    tbl.default = default
+    tbl.configtype = configtype
+
+
+    return tbl
+end
+
+function IADM:GetPrefix()
+    local p = IADM.Prefix
+    return istable(p) and p[1] or p
 end
 
 function IADM:Message(ply, chat, ...)
@@ -93,6 +117,10 @@ function IADM:AddHook(eventname, identifier, func, order)
     hook.Add(eventname, identifier, func, order)
 
     return func
+end
+
+function IADM:AddSQLDatabase(id, func)
+    IADM.SQLDatabases[id] = func
 end
 
 
@@ -153,7 +181,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             args[count] = a
-        elseif carg.type == IADM_ARGTYPE_ENTS then
+        elseif carg.type == IADM_ARGTYPE_ENTS or carg.type == IADM_ARGTYPE_PLRS then
             if a == "^" then
                 a = {pl}
             elseif a == "@" then
@@ -162,8 +190,10 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                 a = {Entity(a)}
             else
                 local tbl = {}
-                for _,ent in pairs(ents.FindByClass(a)) do
-                    table.insert(tbl, ent)
+                if carg.type == IADM_ARGTYPE_ENTS then
+                    for _,ent in pairs(ents.FindByClass(a)) do
+                        table.insert(tbl, ent)
+                    end
                 end
                 
                 for _,ply in pairs(player.GetAll()) do
@@ -224,9 +254,8 @@ end
 
 concommand.Add("iadm", function(pl, cmd, args, str)
     local prefix = "[IADM] "
-    local maincol = Color(147, 107, 226)
     if #args == 0 then
-        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, table.Count(IADM.Commands), "\n")
+        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, table.Count(IADM.Commands), "\n")
         return
     end
 
@@ -243,11 +272,11 @@ concommand.Add("iadm", function(pl, cmd, args, str)
     if !ctbl then
         for k,_ in SortedPairs(IADM.Commands) do
             if string.sub(k, 1, #cmd) ~= cmd then continue end
-            MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?\n")
+            MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?\n")
             return
         end
 
-        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".\n")
+        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".\n")
         return
     end
 
@@ -277,12 +306,12 @@ concommand.Add("iadm", function(pl, cmd, args, str)
             end
         end
 
-        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
+        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
-        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM.Prefix, cmd, s) or "", "\n")
+        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s) or "", "\n")
         return
     elseif needed ~= 0 then
-        MsgC(maincol, prefix, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!", "\n")
+        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!", "\n")
         return
     end
 
@@ -341,7 +370,7 @@ end, function(cmd, argstr, args)
                 if carg.type == IADM_ARGTYPE_STR then
                     s = s..arg
                     table.insert(t, str..s)
-                elseif carg.type == IADM_ARGTYPE_PLR then
+                elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
                     for _,ply in pairs(player.GetAll()) do
                         if string.find(string_lower(ply:Nick()), string_lower(arg)) then
                             table.insert(t, str..s..(string.format("\"%s\"", ply:Nick())))
@@ -354,7 +383,7 @@ end, function(cmd, argstr, args)
                     s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or "text") or string.format("<%s>", carg.hint or "text"))))
                     table.insert(t, str..s)
                     break
-                elseif carg.type == IADM_ARGTYPE_PLR then
+                elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
                     for _,ply in pairs(player.GetAll()) do
                         table.insert(t, str..s..(string.format("\"%s\"", ply:Nick())))
                     end
@@ -382,28 +411,7 @@ concommand.Add("iadm_changelogs", function(pl)
     local col_del = Color(244, 54, 44)
     local col_warn = Color(255, 0, 0)
     local col_fix = Color(86, 209, 239)
-    local change_notes = [[Initial Release - v0.1
-+ Basic commands functionality
-+ Basic permissions command check system
-+ 13 commands, including: help, status, lua, kill, skill, ignite, unignite, teleport, kick, tsay, csay, noclip and cleanup
-+ Usable commands from chat
-
-! There is no database nor any kind of usergroup management yet.
-! This will be added in v0.3 release.
-
-# HOTFIX 1 (#2):
-* Fix errors for commands not being executed if received net message for using command from client
-* Fix the version
-
-# Update v0.2 (#3):
-+ Added 4 new commands: hp, entinfo, restart, map
-+ Added globals
-
-* Vastly improved and fixed command usages via console and chat
-
-v0.2 hotfix 1 (#4):
-* Fixed version
-]]
+    local change_notes = [[]]
 
     local tbl = {}
     for i,v in pairs(string.Explode("\n", change_notes)) do
@@ -427,11 +435,46 @@ v0.2 hotfix 1 (#4):
 end)
 
 
-for _,file in ipairs(file.Find("iadm/commands/*.lua", "LUA", "sortasc")) do
+local files = file.Find("iadm/modules/*.lua", "LUA", "sortasc")
+for _,file in ipairs(files) do
+    if string.StartsWith(file, "sv_") then continue end
+    IADM_MODULE_SHOULDINCLUDE = true
+    include("iadm/modules/"..file)
+    IADM_MODULE_SHOULDINCLUDE = nil
+end
+
+files = file.Find("iadm/modules/sv_*.lua", "LUA", "sortasc")
+for _,file in ipairs(files) do
+    IADM_MODULE_SHOULDINCLUDE = true
+    include("iadm/modules/"..file)
+    IADM_MODULE_SHOULDINCLUDE = nil
+end
+
+files = file.Find("iadm/commands/*.lua", "LUA", "sortasc")
+for _,file in ipairs(files) do
     AddCSLuaFile("iadm/commands/"..file)
     include("iadm/commands/"..file)
 end
 
-for _,file in ipairs(file.Find("iadm/modules/*.lua", "LUA", "sortasc")) do
-    include("iadm/modules/"..file)
-end
+local jumped = {}
+hook.Add("StartCommand", "bhop", function(ply, ucmd)
+    if ply:GetMoveType() ~= MOVETYPE_WALK or ply:WaterLevel() > 1 then return end
+    local buttons = ucmd:GetButtons()
+    local jumping = bit.band(buttons, IN_JUMP) ~= 0
+
+    if jumping and !jumped[ply] and ply:OnGround() then
+        if ply:Crouching() and bit.band(buttons, IN_DUCK) == 0 then
+            buttons = buttons + IN_DUCK
+        end
+        -- buttons = buttons + IN_JUMP
+        jumped[ply] = true
+    else
+        if jumping and !ply:OnGround() then
+            buttons = buttons - IN_JUMP
+        end
+        jumped[ply] = nil
+    end
+    
+    ucmd:SetButtons(buttons)
+end)
+
