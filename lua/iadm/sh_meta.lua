@@ -6,4 +6,8 @@ if meta_ply then
         net.WriteTable({...})
         net.Send(self)
     end
+
+    function meta_ply:GetIADMSessionTime()
+        return self.IADM_playtime + IADM_spawntime - SysTime()
+    end
 end

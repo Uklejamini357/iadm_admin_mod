@@ -5,13 +5,15 @@ if not IADM then
     IADM.Modules = {}
     IADM.Hooks = {}
     IADM.SQLDatabases = {}
+    IADM.SQLDatabasesLoad = {}
 
     IADM.BannedPlayers = {}
     IADM.DatabaseDir = "iadm"
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.3 beta 1"
+IADM.Version = "0.3 beta 2"
+IADM.UpdateVer = 6
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -123,6 +125,9 @@ function IADM:AddSQLDatabase(id, func)
     IADM.SQLDatabases[id] = func
 end
 
+function IADM:AddLoadSQL(id, func)
+    IADM.SQLDatabasesLoad[id] = func
+end
 
 function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
     for count,v in pairs(args) do
@@ -455,26 +460,3 @@ for _,file in ipairs(files) do
     AddCSLuaFile("iadm/commands/"..file)
     include("iadm/commands/"..file)
 end
-
-local jumped = {}
-hook.Add("StartCommand", "bhop", function(ply, ucmd)
-    if ply:GetMoveType() ~= MOVETYPE_WALK or ply:WaterLevel() > 1 then return end
-    local buttons = ucmd:GetButtons()
-    local jumping = bit.band(buttons, IN_JUMP) ~= 0
-
-    if jumping and !jumped[ply] and ply:OnGround() then
-        if ply:Crouching() and bit.band(buttons, IN_DUCK) == 0 then
-            buttons = buttons + IN_DUCK
-        end
-        -- buttons = buttons + IN_JUMP
-        jumped[ply] = true
-    else
-        if jumping and !ply:OnGround() then
-            buttons = buttons - IN_JUMP
-        end
-        jumped[ply] = nil
-    end
-    
-    ucmd:SetButtons(buttons)
-end)
-

@@ -70,15 +70,15 @@ v0.2: (DONE)
 
 v0.3: (CURRENT)
 - Add SQL database (WIP)
-- Add UserGroups management
-- Override ply:IsAdmin() and ply:IsSuperAdmin() functions
-- Make lower ranked players unable to target commands on higher ranked players
-- Add OverrideCanTarget and CanTarget extensive functionality
+- Add UserGroups management (WIP)
+- Override ply:IsAdmin() and ply:IsSuperAdmin() functions (WIP)
+- Make lower ranked players unable to target commands on higher ranked players (WIP)
+- Add OverrideCanTarget and CanTarget extensive functionality (WIP)
 - Implement more commands
 
 v0.4:
 - Add logging system
-- Make addon more configurable with
+- Make addon more configurable with the config table
 - More commands
 
 v0.5:

@@ -28,8 +28,10 @@ end)
 
 
 IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
-    local tbl = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=?", ply:SteamID64())
+    local isbot = ply:IsBot()
+    local id64 = ply:SteamID64()
 
+    local tbl = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=?", ply:SteamID64())
     if table.Count(tbl) > 0 then
         if tbl.groupname and IADM.UserGroups[tbl.groupname] then
             ply:SetUserGroup(tbl.groupname)
@@ -37,16 +39,38 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
 
         ply.IADM_firsttime = tbl.firsttime
         ply.IADM_playtime = tbl.playtime
-        ply.IADM_lastseen = tbl.lastseen
-    else
+        ply.IADM_lastseen = os.time()
+        
+        ply.IADM_spawntime = SysTime() -- using SysTime cuz there's no other way to Calculate CurTime() without timescale 
 
+        if !isbot then
+            sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users"..
+                "SET name=?, lastseen=? WHERE ID=?",
+                ply:Name(),
+                os.time(),
+                id64
+            )
+        end
+    elseif !isbot then
         sql.QueryTyped("INSERT INTO "..IADM.DatabaseDir.."_users(id64, name, groupname, firsttime, playtime, lastseen) VALUES(?, ?, ?, ?, ?, ?)",
-            ply:SteamID64(),
+            id64,
             ply:Name(),
-            ply:GetUserGroup(),
+            ply:IsListenServerHost() and "superadmin" or ply:GetUserGroup(),
             os.time(),
             0,
             os.time()
+        )
+    end
+end, PRE_HOOK)
+
+IADM:AddHook("ShutDown", "SavePlayerDatas", function()
+    for _,ply in pairs(player.GetHumans()) do
+        local id64 = ply:SteamID64()
+        sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users"..
+            "SET name=?, lastseen=? WHERE id=?",
+            ply:Name(),
+            os.time(),
+            id64
         )
     end
 end, PRE_HOOK)
@@ -62,7 +86,7 @@ IADM:AddSQLDatabase("users", function(id)
     ")")
 end)
 
-IADM:AddHook("Initialize", "SQLDatabases", function()
+IADM:AddHook("Initialize", "SQLDatabaseInit", function()
     for id,func in pairs(IADM.SQLDatabases) do
         func(id)
     end
@@ -184,3 +208,10 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
     end)
     if silent then return "" end
 end, HOOK_NORMAL)
+
+concommand.Add("iadm_reset_database", function(pl)
+    if !pl:IsValid() or !pl:IsListenServerHost() then return end
+
+    
+    RunConsoleCommand("changelevel", game.GetMap())
+end)
