@@ -12,7 +12,7 @@ net.Receive("iadm_command", function(len, pl)
     if !pl:IsValid() then return end
 
     if !IADM:CanUseCommand(pl, cmd) then
-        IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions! Need ", IADM_ECHOCOLOR_ERROR_ARGVAR, ctbl.PermsRequire, IADM_ECHOCOLOR_ERROR, " rank!")
+        IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions to use ", IADM_ECHOCOLOR_ERROR_ARGVAR, cmd, IADM_ECHOCOLOR_ERROR, " command!")
         pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
         return ""
     end
@@ -29,10 +29,10 @@ end)
 
 IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
     local isbot = ply:IsBot()
-    local id64 = ply:SteamID64()
+    local id64 = ply:GetIADMSteamID64()
 
-    local tbl = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=?", ply:SteamID64())
-    if table.Count(tbl) > 0 then
+    local tbl = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=?", id64)[1]
+    if tbl then
         if tbl.groupname and IADM.UserGroups[tbl.groupname] then
             ply:SetUserGroup(tbl.groupname)
         end
@@ -63,17 +63,31 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
     end
 end, PRE_HOOK)
 
+local function PlayerSave(ply)
+    local id64 = ply:GetIADMSteamID64()
+    sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users "..
+        "SET name=?, lastseen=? WHERE id64=?",
+        ply:Name(),
+        os.time(),
+        id64
+    )
+end
+
 IADM:AddHook("ShutDown", "SavePlayerDatas", function()
     for _,ply in pairs(player.GetHumans()) do
-        local id64 = ply:SteamID64()
-        sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users"..
-            "SET name=?, lastseen=? WHERE id=?",
-            ply:Name(),
-            os.time(),
-            id64
-        )
+        PlayerSave(ply)
     end
-end, PRE_HOOK)
+end, HOOK_HIGH)
+
+local NextSave = SysTime()
+IADM:AddHook("Think", "PlayerDataPeriodicSave", function()
+    if NextSave > SysTime() then return end
+    NextSave = SysTime() + 60
+
+    for _,ply in pairs(player.GetHumans()) do
+        PlayerSave(ply)
+    end
+end)
 
 IADM:AddSQLDatabase("users", function(id)
     sql.QueryTyped("CREATE TABLE IF NOT EXISTS iadm_users ("..
@@ -124,9 +138,10 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
     local cmd = string.lower(string.sub(command, 2))
     local ctbl = IADM.Commands[cmd]
     if !ctbl then
-        for _,c in pairs(IADM.Commands) do
+        for _cmd,c in pairs(IADM.Commands) do
             if !c.Aliases then continue end
             if table.HasValue(c.Aliases, cmd) then
+                cmd = _cmd
                 ctbl = c
                 break
             end
@@ -138,7 +153,7 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
     local silent = string.sub(text, 1, 1) == "/" or ctbl.Silent
 
     if !IADM:CanUseCommand(pl, cmd) then
-        msg(false, IADM_ECHOCOLOR_ERROR, "Insufficient permissions! Need ", IADM_ECHOCOLOR_ERROR_ARGVAR, ctbl.PermsRequire, IADM_ECHOCOLOR_ERROR, " rank!")
+        msg(false, IADM_ECHOCOLOR_ERROR, "Insufficient permissions to use ", IADM_ECHOCOLOR_ERROR_ARGVAR, cmd, IADM_ECHOCOLOR_ERROR, " command!")
         pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
         if silent then return "" else return end
     end
@@ -209,9 +224,37 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
     if silent then return "" end
 end, HOOK_NORMAL)
 
-concommand.Add("iadm_reset_database", function(pl)
-    if !pl:IsValid() or !pl:IsListenServerHost() then return end
+local pass="I want to confirm deletion of the IADM database. "
+for i=1,10 do
+    pass=pass..string.char(math.random(33,126))
+end
 
-    
+concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
+    if pl:IsValid() and !pl:IsListenServerHost() then return end
+
+    local p = pass
+    if str ~= pass and str == "" then
+        IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "This command is only for the use of development purposes.")
+        IADM:Message(pl, true, Color(255,255,55), "To delete your IADM database, type in the following:")
+        IADM:Message(pl, true, Color(255,128,0), cmd, " ", pass)
+        IADM:Message(pl, true, Color(190,0,0), "[CRITICAL WARNING] BACKUP YOUR sv.db BEFORE DOING IT OR YOU RISK DATA DELETION!")
+        return
+    elseif str ~= "" then
+        IADM:Message(pl, true, Color(190,0,0), "Invalid.")
+        return
+    end
+
+    for id,v in pairs(IADM.SQLDatabases) do
+        sql.QueryTyped("DROP TABLE "..IADM.DatabaseDir.."_"..id)
+    end
+
+    for event,tbl in pairs(IADM.Hooks) do
+        for id,_ in pairs(IADM.Hooks[event]) do
+            hook.Remove(event, id)
+            IADM.Hooks[event][id] = nil
+        end
+        IADM.Hooks[event] = nil
+    end
+
     RunConsoleCommand("changelevel", game.GetMap())
 end)

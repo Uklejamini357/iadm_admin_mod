@@ -5,12 +5,12 @@ local cmd = IADM:AddCommand("kick", function(caller, target, reason)
 end)
 cmd.Name = "Kick"
 cmd.Desc = "Kicks the player with a reason."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="reason", optional=true, varargs=true})
 
 local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
-    local success, err = IADM:AddBan(target:SteamID64(), reason, duration, caller:SteamID64()) -- steamid64 else it won't work
+    local success, err = IADM:AddBan(target:GetIADMSteamID64(), reason, duration, caller:GetIADMSteamID64()) -- steamid64 else it won't work
 
     if success then
         IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " was ", Color(255,0,0), "banned", IADM_ECHOCOLOR_TEXT, "! (", Color(255,128,0), reason, IADM_ECHOCOLOR_TEXT, ")")
@@ -21,7 +21,7 @@ local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
 end)
 cmd.Name = "Bans"
 cmd.Desc = "Bans the target for a specified amount of time."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=""})
@@ -35,7 +35,7 @@ local cmd = IADM:AddCommand("csay", function(caller, text)
 end)
 cmd.Name = "Csay"
 cmd.Desc = "Send a message to everyone displayed on the center screen."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="text", varargs=true})
 
 local cmd = IADM:AddCommand("tsay", function(caller, text)
@@ -45,7 +45,7 @@ local cmd = IADM:AddCommand("tsay", function(caller, text)
 end)
 cmd.Name = "Tsay"
 cmd.Desc = "Send a message to everyone in chat."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="text", varargs=true})
 
 local cmd = IADM:AddCommand("noclip", function(caller, target)
@@ -57,7 +57,7 @@ local cmd = IADM:AddCommand("noclip", function(caller, target)
 end)
 cmd.Name = "Noclip"
 cmd.Desc = "Toggle noclip for players."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS, default="^"})
 
 local cmd = IADM:AddCommand("cleanup", function(caller)
@@ -67,7 +67,7 @@ local cmd = IADM:AddCommand("cleanup", function(caller)
 end)
 cmd.Name = "Cleanup"
 cmd.Desc = "Cleans up the map. This will not restart the round in some gamemodes."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 
 local RunConsoleCommand = RunConsoleCommand
 local cmd = IADM:AddCommand("restart", function(caller)
@@ -77,11 +77,11 @@ local cmd = IADM:AddCommand("restart", function(caller)
 end)
 cmd.Name = "Restart"
 cmd.Desc = "Restarts the current map."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 
 local cmd = IADM:AddCommand("steamid", function(caller, target)
     IADM:Message(caller, true, IADM_ECHOCOLOR_ARG1, caller == target and "Your" or target:Nick().."'s", IADM_ECHOCOLOR_TEXT, " steamid is: ", IADM_ECHOCOLOR_ARG2, target:SteamID())
-    IADM:Message(caller, true, IADM_ECHOCOLOR_ARG1, caller == target and "Your" or target:Nick().."'s", IADM_ECHOCOLOR_TEXT, " steamid64 is: ", IADM_ECHOCOLOR_ARG2, target:SteamID64())
+    IADM:Message(caller, true, IADM_ECHOCOLOR_ARG1, caller == target and "Your" or target:Nick().."'s", IADM_ECHOCOLOR_TEXT, " steamid64 is: ", IADM_ECHOCOLOR_ARG2, target:GetIADMSteamID64())
 end)
 cmd.Name = "SteamID"
 cmd.Desc = "Get your, or another target's steam ID"

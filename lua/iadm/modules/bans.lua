@@ -32,10 +32,10 @@ function IADM:CanBeBanned(id64)
 end
 
 function IADM:AddBan(id64, reason, duration, bannedby)
-    if IsValid(id64) then id64 = id64:SteamID64()
+    if IsValid(id64) then id64 = id64:GetIADMSteamID64()
     elseif type(id64) ~= "string" then return false, "Invalid user!" end
-    if IsValid(bannedby) then bannedby = bannedby:SteamID64()
-    elseif type(bannedby) ~= "string" then bannedby = bannedby:SteamID64() return false, "Invalid user banning the target!" end
+    if IsValid(bannedby) then bannedby = bannedby:GetIADMSteamID64()
+    elseif type(bannedby) ~= "string" then bannedby = bannedby:GetIADMSteamID64() return false, "Invalid user banning the target!" end
 
     if id64 == bannedby then return false, "You cannot ban yourself!" end
     if !IADM:CanBeBanned(id64) then return false, "Target is immune to being banned!" end

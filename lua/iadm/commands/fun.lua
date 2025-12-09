@@ -1,8 +1,7 @@
 local allplys = player.GetAll
 
 local cmd = IADM:AddCommand("kill", function(caller, targets)
-    for i=1,#targets do
-        local ply = targets[i]
+    for _,ply in ipairs(targets) do
         if !ply:Alive() then continue end
 
         ply:Kill()
@@ -11,13 +10,11 @@ local cmd = IADM:AddCommand("kill", function(caller, targets)
 end)
 cmd.Name = "Kill"
 cmd.Desc = "Kills the player."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 
 local cmd = IADM:AddCommand("explode", function(caller, targets, level)
-    for i=1,#targets do
-        local ply = targets[i]
-
+    for _,ply in ipairs(targets) do
         if ply:Alive() then
             local e = EffectData()
             local pos = ply:GetPos()
@@ -50,62 +47,66 @@ local cmd = IADM:AddCommand("explode", function(caller, targets, level)
 end)
 cmd.Name = "Explode"
 cmd.Desc = "Explodes the player violently."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, hint="[explosion level]", default=1})
 
-local cmd = IADM:AddCommand("skill", function(caller, target)
-    if target:Alive() then
-        target:KillSilent()
-        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " silently!")
+local cmd = IADM:AddCommand("skill", function(caller, targets)
+    for _,ply in ipairs(targets) do
+        if ply:Alive() then
+            ply:KillSilent()
+            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", Color(255,0,0), ply:Nick(), IADM_ECHOCOLOR_TEXT, " silently!")
+        end
     end
 end)
 cmd.Name = "Silent Kill"
 cmd.Desc = "Silently kills the player."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 
-local cmd = IADM:AddCommand("strip", function(caller, target)
-    if target:Alive() then
-        target:StripWeapons()
-        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Stripped ", IADM_ECHOCOLOR_ARG1, target:Nick(), IADM_ECHOCOLOR_TEXT, "'s current weapons!")
+local cmd = IADM:AddCommand("strip", function(caller, targets)
+    for _,ply in ipairs(targets) do
+        if ply:Alive() then
+            ply:StripWeapons()
+            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Stripped ", IADM_ECHOCOLOR_ARG1, ply:Nick(), IADM_ECHOCOLOR_TEXT, "'s current weapons!")
+        end
     end
 end)
 cmd.Name = "Strip"
 cmd.Desc = "Strips weapons away from the target."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 
 
 local cmd = IADM:AddCommand("hp", function(caller, targets, hp)
-    for i=1,#targets do
-        targets[i]:SetHealth(hp)
+    for _,ply in ipairs(targets) do
+        ply:SetHealth(hp)
     end
 end)
-cmd.Name = "Hp"
+cmd.Name = "HP"
 cmd.Desc = "Sets the target a specified amount of health."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})
 
 local cmd = IADM:AddCommand("ignite", function(caller, targets, dur)
-    for i=1,#targets do
-        targets[i]:Ignite(dur)
+    for _,ply in ipairs(targets) do
+        ply:Ignite(dur)
     end
 end)
 cmd.Name = "Ignite"
 cmd.Desc = "Ignite a player for a specified amount of seconds."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})
 
 local cmd = IADM:AddCommand("unignite", function(caller, targets, dur)
-    for i=1,#targets do
-        targets[i]:Extinguish()
+    for _,ply in ipairs(targets) do
+        ply:Extinguish()
     end
 end)
 cmd.Name = "Unignite"
 cmd.Desc = "Extinguish specified entities."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})

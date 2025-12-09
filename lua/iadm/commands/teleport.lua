@@ -15,7 +15,7 @@ end)
 cmd.Name = "Teleport"
 cmd.Desc = "Teleports the player to where you are looking."
 cmd.Aliases = {"tp", "tele"}
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
 
 local cmd = IADM:AddCommand("bring", function(caller, target)
@@ -42,5 +42,5 @@ local cmd = IADM:AddCommand("bring", function(caller, target)
 end)
 cmd.Name = "Bring"
 cmd.Desc = "Brings the target to you."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS, default="^"})

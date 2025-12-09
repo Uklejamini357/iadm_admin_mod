@@ -10,4 +10,9 @@ if meta_ply then
     function meta_ply:GetIADMSessionTime()
         return self.IADM_playtime + IADM_spawntime - SysTime()
     end
+
+    local M_SteamID64 = meta_ply.SteamID64
+    function meta_ply:GetIADMSteamID64()
+        return self:IsBot() and "1" or M_SteamID64(self)
+    end
 end

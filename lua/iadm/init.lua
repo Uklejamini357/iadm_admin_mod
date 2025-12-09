@@ -12,8 +12,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.3 beta 2"
-IADM.UpdateVer = 6
+IADM.Version = "0.3 beta 3"
+IADM.UpdateVer = 7
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -243,24 +243,36 @@ end
 
 function IADM:CanUseCommand(pl, cmd)
     if !pl then return false end
-    if (pl == NULL or pl:IsListenServerHost()) then return true end
+    -- if (pl == NULL or pl:IsListenServerHost()) then return true end
     local ctbl = IADM.Commands[cmd]
     if not ctbl then return false end
 
-    if (ctbl.PermsRequire == "admin" and !pl:IsAdmin()) then
-        return false
-    elseif (ctbl.PermsRequire == "superadmin" and !pl:IsSuperAdmin()) then
-        return false
+    local ugrp = IADM.UserGroups[pl:GetUserGroup()]
+
+    if ugrp.powerlevel and (ctbl.PowerLevelReq or 0) <= ugrp.powerlevel then
+        return true
     end
 
-    return true
+    if !ctbl.PowerLevelReq then
+        return true
+    end
+
+
+    return false
 end
 
 
 concommand.Add("iadm", function(pl, cmd, args, str)
     local prefix = "[IADM] "
     if #args == 0 then
-        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, table.Count(IADM.Commands), "\n")
+        local c = 0
+        for cmd,ctbl in pairs(IADM.Commands) do
+            if IADM:CanUseCommand(pl, cmd) then
+                c = c + 1
+            end
+        end
+
+        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, c, "\n")
         return
     end
 
@@ -284,14 +296,6 @@ concommand.Add("iadm", function(pl, cmd, args, str)
         MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".\n")
         return
     end
-
---[[
-    for cmd,arg in pairs(IADM.Commands) do
-        if arg.Aliases then
-
-        end
-    end
-]]
 
     local inchat = false
     local needed = #ctbl.Args
@@ -334,7 +338,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
     elseif SERVER then
         if !IADM:CanUseCommand(pl, cmd) then
-            IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions! Need ", IADM_ECHOCOLOR_ERROR_ARGVAR, ctbl.PermsRequire, IADM_ECHOCOLOR_ERROR, " rank!")
+            IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions to use ", IADM_ECHOCOLOR_ERROR_ARGVAR, cmd, IADM_ECHOCOLOR_ERROR, " command!")
             pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
             return ""
         end
@@ -398,9 +402,9 @@ end, function(cmd, argstr, args)
         end
     elseif (#args + next) < 2 then
         local times = 0
-        for k,_ in SortedPairs(IADM.Commands) do
+        for k,_ in pairs(IADM.Commands) do
             if string.sub(k, 1, #arg1) ~= arg1 then continue end
-            if !IADM:CanUseCommand(CLIENT and LocalPlayer() or NULL, k) then continue end
+            if !IADM:CanUseCommand(CLIENT and LocalPlayer() or !game.IsDedicated() and player.GetAll()[1] or NULL, k) then continue end
             table.insert(t, cmd.." "..k)
             if times >= 50 then break end
         end

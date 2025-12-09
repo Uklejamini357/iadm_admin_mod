@@ -1,5 +1,13 @@
 # Changelogs for IADM
 
+v0.3 beta 3 (#7):
+too lazy for changelogs
+
+v0.3 beta 2 (#6):
+too lazy for changelogs
+
+v0.3 beta 1 (#5):
+too lazy for changelogs
 
 v0.2 hotfix 1 (#4):
 * Fixed version

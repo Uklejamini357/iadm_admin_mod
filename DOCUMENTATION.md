@@ -13,4 +13,10 @@ iadm entinfo <ent> - Gets information about the targetted entity (classname, hp/
 
 ### Fun
 iadm kill <players> - Kills targets.
+iadm explode <players> <explosionlevel default=1> - Explodes players. Higher values result in much more violent explosion.
+iadm skill <players> - Silently kills targets.
+iadm strip <players> - Removes weapons for the target(s).
+iadm hp <players> <hp> - Sets target(s) health to the specified amount.
+iadm ignite <entities> <duration default=300> - Ignites targets.
+iadm unignite <entities> - Extinguishes targets.
 
