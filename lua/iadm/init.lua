@@ -12,8 +12,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.3 beta 3"
-IADM.UpdateVer = 7
+IADM.Version = "0.3 beta 4"
+IADM.UpdateVer = 8
 IADM.Author = "Uklejamini"
 
 local IADM = IADM

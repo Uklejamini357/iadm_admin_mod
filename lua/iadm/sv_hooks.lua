@@ -104,6 +104,10 @@ IADM:AddHook("Initialize", "SQLDatabaseInit", function()
     for id,func in pairs(IADM.SQLDatabases) do
         func(id)
     end
+
+    for id,func in pairs(IADM.SQLDatabasesLoad) do
+        func(id)
+    end
 end, PRE_HOOK)
 
 local string_lower = string.lower

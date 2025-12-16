@@ -5,7 +5,7 @@ local cmd = IADM:AddCommand("kill", function(caller, targets)
         if !ply:Alive() then continue end
 
         ply:Kill()
-        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", Color(255,0,0), ply:Nick(), IADM_ECHOCOLOR_TEXT, "!")
+        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, "!")
     end
 end)
 cmd.Name = "Kill"
@@ -41,7 +41,7 @@ local cmd = IADM:AddCommand("explode", function(caller, targets, level)
                 explo:Input("explode")
             end
 
-            IADM:MessageWPrefix(allplys(), true, Color(255,0,0), ply:Nick(), IADM_ECHOCOLOR_TEXT, " got blasted in a violent explosion!")
+            IADM:MessageWPrefix(allplys(), true, ply, IADM_ECHOCOLOR_TEXT, " got blasted in a violent explosion!")
         end
     end
 end)
@@ -55,7 +55,7 @@ local cmd = IADM:AddCommand("skill", function(caller, targets)
     for _,ply in ipairs(targets) do
         if ply:Alive() then
             ply:KillSilent()
-            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", Color(255,0,0), ply:Nick(), IADM_ECHOCOLOR_TEXT, " silently!")
+            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, " silently!")
         end
     end
 end)
@@ -68,7 +68,7 @@ local cmd = IADM:AddCommand("strip", function(caller, targets)
     for _,ply in ipairs(targets) do
         if ply:Alive() then
             ply:StripWeapons()
-            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Stripped ", IADM_ECHOCOLOR_ARG1, ply:Nick(), IADM_ECHOCOLOR_TEXT, "'s current weapons!")
+            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Stripped ", ply, IADM_ECHOCOLOR_TEXT, "'s current weapons!")
         end
     end
 end)
@@ -78,16 +78,25 @@ cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 
 
-local cmd = IADM:AddCommand("hp", function(caller, targets, hp)
+local cmd = IADM:AddCommand("hp", function(caller, targets, hp, mhp)
     for _,ply in ipairs(targets) do
-        ply:SetHealth(hp)
+        local hp = hp
+        if !hp then hp = ply:GetMaxHealth() end
+
+        if hp ~= 0 then
+            ply:SetHealth(hp)
+        end
+        if mhp and mhp ~= 0 then
+            ply:SetMaxHealth(mhp)
+        end
     end
 end)
 cmd.Name = "HP"
 cmd.Desc = "Sets the target a specified amount of health."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
-cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})
+cmd:AddArgument({type=IADM_ARGTYPE_NUM, optional=true})
+cmd:AddArgument({type=IADM_ARGTYPE_NUM, optional=true})
 
 local cmd = IADM:AddCommand("ignite", function(caller, targets, dur)
     for _,ply in ipairs(targets) do
@@ -110,3 +119,56 @@ cmd.Desc = "Extinguish specified entities."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})
+
+
+IADM.InfAmmoPlayers = IADM.InfAmmoPlayers or {}
+local infammos = IADM.InfAmmoPlayers
+local cmd = IADM:AddCommand("infammo", function(caller, target, mode)
+
+    local handler = "IADM.InfAmmo."..tostring(target)
+    if mode > 0 then
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Enabled infammo for ", target, IADM_ECHOCOLOR_TEXT, "!")
+        infammos[target] = mode
+
+        hook.Add("Think", handler, function()
+            if !target:IsValid() or !infammos[target] then
+                infammos[target] = nil
+                hook.Remove("Think", handler)
+            end
+
+            local wep = target:GetActiveWeapon()
+            if wep and wep:IsValid() then
+                local maxclip1 = wep:GetMaxClip1()
+                local maxclip2 = wep:GetMaxClip2()
+                local ammotype1 = wep:GetPrimaryAmmoType()
+                local ammotype2 = wep:GetSecondaryAmmoType()
+
+                if mode > 1 then
+                    if wep:Clip1() < maxclip1 then
+                        wep:SetClip1(maxclip1)
+                    end
+
+                    if wep:Clip2() < maxclip2 then
+                        wep:SetClip2(maxclip2)
+                    end
+                end
+
+
+                if target:GetAmmoCount(ammotype1) < maxclip1 then
+                    target:SetAmmo(maxclip1, ammotype1)
+                end
+                if target:GetAmmoCount(ammotype2) < math.max(1, maxclip2) then
+                    target:SetAmmo(math.max(1, maxclip2), ammotype2)
+                end
+            end
+        end)
+    else
+        infammos[target] = nil
+        hook.Remove("Think", handler)
+    end
+end)
+cmd.Name = "Infammo"
+cmd.Desc = "Gives the player infinite ammo.\nModes: 0 - disable, 1 - infinite reserve ammo, 2 - infinite reserve + clip ammo"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_PLR})
+cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=1})

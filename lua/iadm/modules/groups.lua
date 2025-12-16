@@ -43,6 +43,34 @@ function IADM:AddGroup(name, powerlevel, createdby)
         tbl.timecreated,
         tbl.timemodified
     )
+
+    return true
+end
+
+function IADM:RemoveGroup(name, caller)
+    if IsValid(caller) then caller = caller:GetIADMSteamID64()
+    elseif type(caller) ~= "string" then return false, "Invalid caller!" end
+
+    IADM.UserGroups[name] = nil
+    for _,ply in pairs(player.GetAll()) do
+        if !ply:IsUserGroup(name) then continue end
+        ply:SetUserGroup("user")
+    end
+
+    local db = IADM.DatabaseDir.."_groups"
+    sql.QueryTyped("DELETE FROM "..db.." WHERE name=?", name)
+
+    local db = IADM.DatabaseDir.."_players"
+    sql.QueryTyped("UPDATE "..db.." SET groupname='user' WHERE groupname=?", name)
+
+    return true
+end
+
+function IADM:ModifyGroup(name, key, value, caller)
+    if IsValid(caller) then caller = caller:GetIADMSteamID64()
+    elseif type(caller) ~= "string" then return false, "Invalid caller!" end
+
+    return false, "Functionality unavailable!"
 end
 
 function IADM:AddUserToGroup(id64, group, caller)
@@ -67,7 +95,9 @@ function IADM:AddUserToGroup(id64, group, caller)
 end
 
 IADM:AddSQLDatabase("groups", function(id)
-    sql.QueryTyped("CREATE TABLE IF NOT EXISTS "..(IADM.DatabaseDir.."_"..id).." ("..
+    local db = (IADM.DatabaseDir.."_"..id)
+
+    sql.QueryTyped("CREATE TABLE IF NOT EXISTS "..db.." ("..
         "name CHAR(63) PRIMARY KEY, "..
         "powerlevel SMALLINT, "..
         "createdby BIGINT, "..
@@ -76,6 +106,29 @@ IADM:AddSQLDatabase("groups", function(id)
         "timecreated INT UNSIGNED, "..
         "timemodified INT UNSIGNED"..
     ")")
+
+    local ostime = os.time()
+    local t = sql.QueryTyped("SELECT * FROM "..db)
+    for id, tbl in pairs(IADM.UserGroups) do
+        local shouldcreate = true
+        for i=1,#t do
+            if t[i] and t[i].name ~= id then continue end
+            if t[i] and t[i].name == id then shouldcreate = false break end
+        end
+
+        if !shouldcreate then continue end
+
+        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
+            "VALUES(?, ?, ?, ?, ?, ?, ?)",
+            id,
+            tbl.powerlevel,
+            tbl.createdby or "0",
+            tbl.lastmodifiedby or "0",
+            tbl.lastmodified or ostime,
+            tbl.timecreated or ostime,
+            tbl.timemodified or ostime
+        )
+    end
 end)
 
 IADM:AddLoadSQL("groups", function(id)
@@ -83,7 +136,5 @@ IADM:AddLoadSQL("groups", function(id)
         local r = rank.name
         rank.name = nil
         IADM.UserGroups[r] = rank
-        print(r)
-        PrintTable(rank)
     end
 end)

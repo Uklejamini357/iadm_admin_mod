@@ -53,12 +53,12 @@ local cmd = IADM:AddCommand("noclip", function(caller, target)
 
     target:SetMoveType(on and MOVETYPE_NOCLIP or MOVETYPE_WALK)
 
-    IADM:MessageWPrefix(caller, true, col, "Turned "..(on and "on" or "off").." noclip for ", Color(255,0,0), target:Nick(), col, "!")
+    IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Turned "..(on and "on" or "off").." noclip for ", Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
 end)
 cmd.Name = "Noclip"
 cmd.Desc = "Toggle noclip for players."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
-cmd:AddArgument({type=IADM_ARGTYPE_PLRS, default="^"})
+cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
 
 local cmd = IADM:AddCommand("cleanup", function(caller)
     game.CleanUpMap(false, nil, function()
@@ -70,6 +70,20 @@ cmd.Desc = "Cleans up the map. This will not restart the round in some gamemodes
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 
 local RunConsoleCommand = RunConsoleCommand
+local cmd = IADM:AddCommand("map", function(caller, map)
+    if !file.Exists(string.format("maps/%s.bsp", map), "GAME") then
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid map", IADM_ECHOCOLOR_ERROR, "!")
+        return
+    end
+    IADM:MessageWPrefix(player.GetAll(), true, Color(255,255,0), caller:Nick(), col, " changed the map to ", Color(255,0,0), map, "!")
+
+    RunConsoleCommand("changelevel", map)
+end)
+cmd.Name = "Map"
+cmd.Desc = "Forces the server to change to a specified map."
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="mapname"})
+
 local cmd = IADM:AddCommand("restart", function(caller)
     IADM:MessageWPrefix(player.GetAll(), true, Color(255,255,0), caller:Nick(), col, " restarted the map!")
 
