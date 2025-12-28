@@ -60,16 +60,8 @@ Absolutely not. I have no intentions, nor any plans to make IADM a paid mod, as 
 
 
 # Roadmap for IADM:
-v0.1: (DONE)
-- Basic commands functionality
-- Set up first commands
-- Execute commands via sending in chat
-- Restrict admin commands to admins only
+> Note: This roadmap may not be 100% accurate.
 
-v0.2: (DONE)
-- Fix stuffs
-- Add some commands
-- Make some changes
 
 v0.3: (CURRENT)
 - Add SQL database
@@ -77,8 +69,21 @@ v0.3: (CURRENT)
 - Override ply:IsAdmin() and ply:IsSuperAdmin() functions
 - Make lower ranked players unable to target commands on higher ranked players
 - Add OverrideCanTarget and CanTarget extensive functionality
+- Add data sync
 - Implement more commands
 
 v0.4:
 - Add logging system
-- Make addon more configurable with
+- Make addon more configurable with the config table
+- More commands
+
+v0.5:
+- Add leveling module
+- Make non-required modules toggleable
+- More commands
+
+v0.6:
+- Add Whitelist module
+
+v0.7:
+- Add votes module

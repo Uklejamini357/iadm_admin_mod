@@ -97,3 +97,16 @@ net.Receive("iadm_csay", function()
     	cam.End2D()
     end)
 end)
+
+net.Receive("iadm_syncdata", function(len)
+    local pl = LocalPlayer()
+    local datatype = net.ReadString()
+    local args = net.ReadTable()
+
+    for _,tbl in ipairs(IADM.RegisteredSyncData) do
+        if tbl.id == datatype then
+            tbl.Func(tbl, pl, args)
+            break
+        end
+    end
+end)

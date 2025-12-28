@@ -7,7 +7,7 @@ end)
 cmd.Name = "Lua"
 cmd.Desc = "Runs a lua code. (Alias of lua_run)"
 cmd.ChatArg = true
-cmd.PermsRequire = "superadmin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="code to run", varargs=true})
 
 local cmd = IADM:AddCommand("entinfo", function(caller, chat, ent)
@@ -27,6 +27,6 @@ end)
 cmd.Name = "Ent info"
 cmd.Desc = "Gets entity info (classname, hp/maxhp, weapon and ammo)"
 cmd.ChatArg = true
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS, default="@"})
 

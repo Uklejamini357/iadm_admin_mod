@@ -6,4 +6,17 @@ if meta_ply then
         net.WriteTable({...})
         net.Send(self)
     end
+
+    function meta_ply:GetIADMSessionTime()
+        return self.IADM_playtime - self.IADM_spawntime + SysTime()
+    end
+
+    local M_SteamID64 = meta_ply.SteamID64
+    function meta_ply:GetIADMSteamID64()
+        return self:IsBot() and "1" or M_SteamID64(self)
+    end
+
+    function meta_ply:GetGroupPowerLevel()
+        return IADM.UserGroups[self:GetUserGroup()].powerlevel or 1
+    end
 end

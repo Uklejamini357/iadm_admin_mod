@@ -1,14 +1,32 @@
-local col = Color(176, 237, 92)
 local cmd = IADM:AddCommand("kick", function(caller, target, reason)
     reason = reason or "No reason provided"
     target:Kick(Format("Kicked %s.\nReason: \n%s", IsValid(caller) and Format("by %s (%s)", caller:Nick(), caller:SteamID64()) or "from the Server", reason))
-    IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), col, " was ", Color(255,0,0), "kicked", col, "! (", Color(255,128,0), reason, col, ")")
+    IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " was ", Color(255,0,0), "kicked", IADM_ECHOCOLOR_TEXT, "! (", Color(255,128,0), reason, IADM_ECHOCOLOR_TEXT, ")")
 end)
 cmd.Name = "Kick"
 cmd.Desc = "Kicks the player with a reason."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="reason", optional=true, varargs=true})
+cmd.RequireHigherPowerLevel = true
+
+local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
+    local success, err = IADM:AddBan(target:GetIADMSteamID64(), reason, duration, caller:GetIADMSteamID64()) -- steamid64 else it won't work
+
+    if success then
+        IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " was ", Color(255,0,0), "banned", IADM_ECHOCOLOR_TEXT, "! (", Color(255,128,0), reason, IADM_ECHOCOLOR_TEXT, ")")
+    else
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, err, "!")
+    end
+
+end)
+cmd.Name = "Ban"
+cmd.Desc = "Bans the target for a specified amount of time."
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_PLR})
+cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=""})
+cmd.RequireHigherPowerLevel = true
 
 local cmd = IADM:AddCommand("csay", function(caller, text)
     -- local tbl = string.Explode("%#", text)
@@ -19,7 +37,7 @@ local cmd = IADM:AddCommand("csay", function(caller, text)
 end)
 cmd.Name = "Csay"
 cmd.Desc = "Send a message to everyone displayed on the center screen."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="text", varargs=true})
 
 local cmd = IADM:AddCommand("tsay", function(caller, text)
@@ -29,7 +47,7 @@ local cmd = IADM:AddCommand("tsay", function(caller, text)
 end)
 cmd.Name = "Tsay"
 cmd.Desc = "Send a message to everyone in chat."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="text", varargs=true})
 
 local cmd = IADM:AddCommand("noclip", function(caller, target)
@@ -37,11 +55,11 @@ local cmd = IADM:AddCommand("noclip", function(caller, target)
 
     target:SetMoveType(on and MOVETYPE_NOCLIP or MOVETYPE_WALK)
 
-    IADM:MessageWPrefix(caller, true, col, "Turned "..(on and "on" or "off").." noclip for ", Color(255,0,0), target:Nick(), col, "!")
+    IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Turned "..(on and "on" or "off").." noclip for ", Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
 end)
 cmd.Name = "Noclip"
 cmd.Desc = "Toggle noclip for players."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
 
 local cmd = IADM:AddCommand("cleanup", function(caller)
@@ -51,21 +69,12 @@ local cmd = IADM:AddCommand("cleanup", function(caller)
 end)
 cmd.Name = "Cleanup"
 cmd.Desc = "Cleans up the map. This will not restart the round in some gamemodes."
-cmd.PermsRequire = "admin"
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 
 local RunConsoleCommand = RunConsoleCommand
-local cmd = IADM:AddCommand("restart", function(caller)
-    IADM:MessageWPrefix(player.GetAll(), true, Color(255,255,0), caller:Nick(), col, " restarted the map!")
-
-    RunConsoleCommand("changelevel", game.GetMap())
-end)
-cmd.Name = "Restart"
-cmd.Desc = "Restarts the current map."
-cmd.PermsRequire = "admin"
-
 local cmd = IADM:AddCommand("map", function(caller, map)
     if !file.Exists(string.format("maps/%s.bsp", map), "GAME") then
-        IADM:MessageWPrefix(player.GetAll(), true, Color(255,255,0), "Invalid map!")
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid map", IADM_ECHOCOLOR_ERROR, "!")
         return
     end
     IADM:MessageWPrefix(player.GetAll(), true, Color(255,255,0), caller:Nick(), col, " changed the map to ", Color(255,0,0), map, "!")
@@ -74,5 +83,23 @@ local cmd = IADM:AddCommand("map", function(caller, map)
 end)
 cmd.Name = "Map"
 cmd.Desc = "Forces the server to change to a specified map."
-cmd.PermsRequire = "admin"
-cmd:AddArgument({type=IADM_ARGTYPE_STR})
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="mapname"})
+
+local cmd = IADM:AddCommand("restart", function(caller)
+    IADM:MessageWPrefix(player.GetAll(), true, Color(255,255,0), caller:Nick(), col, " restarted the map!")
+
+    RunConsoleCommand("changelevel", game.GetMap())
+end)
+cmd.Name = "Restart"
+cmd.Desc = "Restarts the current map."
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+
+local cmd = IADM:AddCommand("steamid", function(caller, target)
+    IADM:Message(caller, true, IADM_ECHOCOLOR_ARG1, caller == target and "Your" or target:Nick().."'s", IADM_ECHOCOLOR_TEXT, " steamid is: ", IADM_ECHOCOLOR_ARG2, target:SteamID())
+    IADM:Message(caller, true, IADM_ECHOCOLOR_ARG1, caller == target and "Your" or target:Nick().."'s", IADM_ECHOCOLOR_TEXT, " steamid64 is: ", IADM_ECHOCOLOR_ARG2, target:GetIADMSteamID64())
+end)
+cmd.Name = "SteamID"
+cmd.Desc = "Get your, or another target's steam ID"
+cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
+cmd.IgnoreCanTarget = true
