@@ -1,8 +1,14 @@
 # Changelogs for IADM
 
+### v0.3 Hotfix1 (#10)
++ Added few additional checks for IADM:CmdCanTarget function
++ Add CanTarget checks to autocomplete function in "iadm" console command
+
+* Fixed being unable to target yourself while using a command
+
 # v0.3 (#9)
 + Added groupslist commmand, prints out a list of groups in descending order of powerlevel
-+ Added goto commmand, teleports to the player. Can target everyone.
++ Added goto commmand, teleports to the player.
 
 + Added data networking between server and client
 + Added PLAYER:GetGroupPowerLevel() function for checking player group's power level

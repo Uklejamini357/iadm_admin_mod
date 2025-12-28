@@ -8,6 +8,7 @@ cmd.Desc = "Kicks the player with a reason."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="reason", optional=true, varargs=true})
+cmd.RequireHigherPowerLevel = true
 
 local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
     local success, err = IADM:AddBan(target:GetIADMSteamID64(), reason, duration, caller:GetIADMSteamID64()) -- steamid64 else it won't work
@@ -19,12 +20,13 @@ local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
     end
 
 end)
-cmd.Name = "Bans"
+cmd.Name = "Ban"
 cmd.Desc = "Bans the target for a specified amount of time."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=""})
+cmd.RequireHigherPowerLevel = true
 
 local cmd = IADM:AddCommand("csay", function(caller, text)
     -- local tbl = string.Explode("%#", text)
@@ -100,3 +102,4 @@ end)
 cmd.Name = "SteamID"
 cmd.Desc = "Get your, or another target's steam ID"
 cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
+cmd.IgnoreCanTarget = true

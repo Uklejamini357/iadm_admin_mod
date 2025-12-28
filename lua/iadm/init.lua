@@ -16,7 +16,7 @@ end
 
 IADM.Prefix = {"!", "/"}
 IADM.Version = "0.3"
-IADM.UpdateVer = 9
+IADM.UpdateVer = 10
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -175,12 +175,16 @@ end
 
 function IADM:CmdCanTarget(caller, target, ctbl, carg)
     if ctbl.IgnoreCanTarget then return true end
+    if ctbl.CanAlwaysSelfTarget and caller == target then return true end
+
     if ctbl.OverrideCanTarget then
         return ctbl.OverrideCanTarget(caller, target)
     end
     local cantarget = ctbl.CanTarget and ctbl.CanTarget(caller, target) or carg.CanTarget and carg.CanTarget(caller, target)
     if cantarget then return cantarget end
 
+    if ctbl.RequireHigherPowerLevel or carg.RequireHigherPowerLevel then return target:GetGroupPowerLevel() < caller:GetGroupPowerLevel() end
+    if caller == target then return true end
     return target:GetGroupPowerLevel() <= caller:GetGroupPowerLevel()
 end
 
@@ -240,7 +244,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                 return
             end
 
-            if IADM:CmdCanTarget(pl, a, ctbl, carg) then
+            if !IADM:CmdCanTarget(pl, a, ctbl, carg) then
                 IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", IADM_ECHOCOLOR_ERROR_ARGVAR, a:Nick(), IADM_ECHOCOLOR_ERROR, " cannot be targetted!")
                 return
             end
@@ -256,13 +260,14 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             else
                 local tbl = {}
                 if carg.type == IADM_ARGTYPE_ENTS then
-                    for _,ent in pairs(ents.FindByClass(a)) do
+                    for _,ent in ipairs(ents.FindByClass(a)) do
+                        if ent:IsPlayer() then continue end
                         table.insert(tbl, ent)
                     end
                 end
                 
-                for _,ply in pairs(player.GetAll()) do
-                    if string.find(string_lower(ply:Nick()), string_lower(v)) then
+                for _,ply in ipairs(player.GetAll()) do
+                    if string.find(string_lower(ply:Nick()), string_lower(v)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
                         table.insert(tbl, ply)
                     end
                 end
@@ -340,7 +345,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
     args[1] = nil
 
     local new_args = {}
-    for _,text in pairs(args) do
+    for _,text in ipairs(args) do
         table.insert(new_args, text)
     end
     args = new_args
@@ -367,7 +372,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
     if #ctbl.Args ~= 0 and #ctbl.Args-defaultargsamt == needed and needed ~= 0 then
         local s = ""
-        for count,arg in pairs(ctbl.Args) do
+        for count,arg in ipairs(ctbl.Args) do
             if arg.type == IADM_ARGTYPE_STR then
                 s = s..((arg.optional and string.format("[%s]", arg.hint or "text") or string.format("<%s>", arg.hint or "text")))
             elseif arg.type == IADM_ARGTYPE_NUM then
@@ -384,7 +389,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
         return
     end
 
-    for count,arg in pairs(ctbl.Args) do
+    for count,arg in ipairs(ctbl.Args) do
         if arg and arg.default and not args[count] then
             args[count] = arg.default
         end
@@ -414,6 +419,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
         end
     end
 end, function(cmd, argstr, args)
+    local pl = CLIENT and LocalPlayer() or !game.IsDedicated() and player.GetAll()[1] or NULL
     local t = {}
     local arg1 = string_lower(args[1] or "")
 
@@ -456,8 +462,8 @@ end, function(cmd, argstr, args)
                        s = s..arg
                        add_to_results(str..s)
                    elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                       for _,ply in pairs(player.GetAll()) do
-                           if string.find(string_lower(ply:Nick()), string_lower(arg)) then
+                       for _,ply in ipairs(player.GetAll()) do
+                           if string.find(string_lower(ply:Nick()), string_lower(arg)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
                                add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
                            end
                        end
@@ -465,9 +471,10 @@ end, function(cmd, argstr, args)
                    end
                else
                    if carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                       for _,ply in pairs(player.GetAll()) do
+                        for _,ply in ipairs(player.GetAll()) do
+                            if !IADM:CmdCanTarget(pl, ply, ctbl, carg) then continue end
                            add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
-                       end
+                        end
                        -- break
                    else
                        local defaulthint = carg.type == IADM_ARGTYPE_NUM and "number" or carg.type == IADM_ARGTYPE_BOOL and "true/false" or "string"
@@ -481,8 +488,6 @@ end, function(cmd, argstr, args)
 
             if arg then
                 s=s..arg
-                -- print(arg)
-                -- continue
             end
 
             if islast and arg then
@@ -494,7 +499,7 @@ end, function(cmd, argstr, args)
         local times = 0
         for k,_ in pairs(IADM.Commands) do
             if string.sub(k, 1, #arg1) ~= arg1 then continue end
-            if !IADM:CanUseCommand(CLIENT and LocalPlayer() or !game.IsDedicated() and player.GetAll()[1] or NULL, k) then continue end
+            if !IADM:CanUseCommand(pl, k) then continue end
             add_to_results(cmd.." "..k)
             if times >= 50 then break end
         end
