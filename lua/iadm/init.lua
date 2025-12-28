@@ -345,7 +345,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
     args[1] = nil
 
     local new_args = {}
-    for _,text in ipairs(args) do
+    for _,text in pairs(args) do
         table.insert(new_args, text)
     end
     args = new_args
