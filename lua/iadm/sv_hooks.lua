@@ -1,31 +1,3 @@
-util.AddNetworkString("iadm_command")
-util.AddNetworkString("iadm_printmsg")
-util.AddNetworkString("iadm_csay")
-util.AddNetworkString("iadm_playerusecmd")
-
-net.Receive("iadm_command", function(len, pl)
-    local cmd = net.ReadString()
-    local args = net.ReadTable()
-	
-	local ctbl = IADM.Commands[cmd]
-	if !ctbl then return end
-    if !pl:IsValid() then return end
-
-    if !IADM:CanUseCommand(pl, cmd) then
-        IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions to use ", IADM_ECHOCOLOR_ERROR_ARGVAR, cmd, IADM_ECHOCOLOR_ERROR, " command!")
-        pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
-        return ""
-    end
-
-    args = IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
-
-    if ctbl.ChatArg then
-	    ctbl.Func(pl, false, unpack(args))
-    else
-    	ctbl.Func(pl, unpack(args))
-    end
-end)
-
 
 IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
     local isbot = ply:IsBot()
@@ -60,6 +32,10 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
             0,
             os.time()
         )
+    end
+
+    if !ply:IsBot() then
+        ply.IADM_InitPhase = 1
     end
 end, PRE_HOOK)
 
@@ -241,9 +217,9 @@ concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
         IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "This command is only for the use of development purposes.")
         IADM:Message(pl, true, Color(255,255,55), "To delete your IADM database, type in the following:")
         IADM:Message(pl, true, Color(255,128,0), cmd, " ", pass)
-        IADM:Message(pl, true, Color(190,0,0), "[CRITICAL WARNING] BACKUP YOUR sv.db BEFORE DOING IT OR YOU RISK DATA DELETION!")
+        IADM:Message(pl, true, Color(190,0,0), "[CRITICAL WARNING] BACKUP YOUR sv.db BEFORE DOING IT OR YOU RISK PERMANENT DATA DELETION!")
         return
-    elseif str ~= "" then
+    elseif str ~= pass and str ~= "" then
         IADM:Message(pl, true, Color(190,0,0), "Invalid.")
         return
     end

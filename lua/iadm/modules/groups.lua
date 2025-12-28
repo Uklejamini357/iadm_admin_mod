@@ -9,7 +9,6 @@ MODULE.Required = true
 
 if !IADM_MODULE_SHOULDINCLUDE then return end
 
-if !SERVER then return end
 
 if not IADM.UserGroups then
     IADM.UserGroups = {
@@ -19,122 +18,30 @@ if not IADM.UserGroups then
     }
 end
 
-function IADM:AddGroup(name, powerlevel, createdby)
-    if IsValid(createdby) then createdby = createdby:GetIADMSteamID64()
-    elseif type(createdby) ~= "string" then return false, "Invalid caller!" end
 
-    local ostime = os.time()
-    local tbl = {
-        powerlevel = powerlevel,
-        createdby = createdby,
-        lastmodified = ostime,
-        lastmodifiedby = createdby,
-        timecreated = ostime,
-        timemodified = ostime,
-    }
-    IADM.UserGroups[name] = tbl
+if CLIENT then
+    IADM:RegisterInitDataSync("groups", function(_, pl, tbl)
+        IADM.UserGroups = tbl
+    end)
 
-    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) VALUES(?, ?, ?, ?, ?, ?, ?)",
-        name,
-        powerlevel,
-        createdby,
-        tbl.lastmodifiedby,
-        tbl.lastmodified,
-        tbl.timecreated,
-        tbl.timemodified
-    )
-
-    return true
+    IADM:RegisterDataSync("groups", function(_, pl, tbl)
+        IADM.UserGroups = tbl
+    end)
 end
 
-function IADM:RemoveGroup(name, caller)
-    if IsValid(caller) then caller = caller:GetIADMSteamID64()
-    elseif type(caller) ~= "string" then return false, "Invalid caller!" end
 
-    IADM.UserGroups[name] = nil
-    for _,ply in pairs(player.GetAll()) do
-        if !ply:IsUserGroup(name) then continue end
-        ply:SetUserGroup("user")
-    end
 
-    local db = IADM.DatabaseDir.."_groups"
-    sql.QueryTyped("DELETE FROM "..db.." WHERE name=?", name)
 
-    local db = IADM.DatabaseDir.."_players"
-    sql.QueryTyped("UPDATE "..db.." SET groupname='user' WHERE groupname=?", name)
+local player = FindMetaTable("Player")
+if not player then return end
 
-    return true
+function player:IsAdmin()
+    local usergroup = IADM.UserGroups[self:GetUserGroup()]
+    return usergroup.isadmin or usergroup.issuperadmin
 end
 
-function IADM:ModifyGroup(name, key, value, caller)
-    if IsValid(caller) then caller = caller:GetIADMSteamID64()
-    elseif type(caller) ~= "string" then return false, "Invalid caller!" end
-
-    return false, "Functionality unavailable!"
+function player:IsSuperAdmin()
+    local usergroup = IADM.UserGroups[self:GetUserGroup()]
+    return usergroup.issuperadmin
 end
 
-function IADM:AddUserToGroup(id64, group, caller)
-    local ply
-    if !IADM.UserGroups[group] then return false, "This group doesn't exist!" end
-
-    local ply = player.GetBySteamID64(id64)
-    local db = IADM.DatabaseDir.."_users"
-    if IsValid(ply) then
-        ply:SetUserGroup(group)
-    else
-        local dbply = sql.QueryTyped("SELECT * FROM "..db.." WHERE ID=?", id64)[1]
-        if !dbply then return false, "This player does not exist!" end
-    end
-
-    sql.QueryTyped("UPDATE "..db.." "..
-        "SET groupname=? WHERE id=?",
-        group,
-        id64
-    )
-    return true
-end
-
-IADM:AddSQLDatabase("groups", function(id)
-    local db = (IADM.DatabaseDir.."_"..id)
-
-    sql.QueryTyped("CREATE TABLE IF NOT EXISTS "..db.." ("..
-        "name CHAR(63) PRIMARY KEY, "..
-        "powerlevel SMALLINT, "..
-        "createdby BIGINT, "..
-        "lastmodifiedby BIGINT, "..
-        "lastmodified INT UNSIGNED, "..
-        "timecreated INT UNSIGNED, "..
-        "timemodified INT UNSIGNED"..
-    ")")
-
-    local ostime = os.time()
-    local t = sql.QueryTyped("SELECT * FROM "..db)
-    for id, tbl in pairs(IADM.UserGroups) do
-        local shouldcreate = true
-        for i=1,#t do
-            if t[i] and t[i].name ~= id then continue end
-            if t[i] and t[i].name == id then shouldcreate = false break end
-        end
-
-        if !shouldcreate then continue end
-
-        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
-            "VALUES(?, ?, ?, ?, ?, ?, ?)",
-            id,
-            tbl.powerlevel,
-            tbl.createdby or "0",
-            tbl.lastmodifiedby or "0",
-            tbl.lastmodified or ostime,
-            tbl.timecreated or ostime,
-            tbl.timemodified or ostime
-        )
-    end
-end)
-
-IADM:AddLoadSQL("groups", function(id)
-    for count,rank in ipairs(sql.QueryTyped("SELECT * FROM "..(IADM.DatabaseDir.."_"..id))) do
-        local r = rank.name
-        rank.name = nil
-        IADM.UserGroups[r] = rank
-    end
-end)

@@ -1,5 +1,5 @@
-local cmd = IADM:AddCommand("groupadd", function(caller, chat, name, powerlevel)
-    local success, reason = IADM:AddGroup(name, powerlevel, caller)
+local cmd = IADM:AddCommand("groupadd", function(caller, chat, name, powerlevel, isadmin, issuperadmin)
+    local success, reason = IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, caller)
 
     if success then
         IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Created ", IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " usergroup with ", IADM_ECHOCOLOR_ARG2, "powerlevel ", IADM_ECHOCOLOR_ARG1, powerlevel, IADM_ECHOCOLOR_TEXT, "!")
@@ -14,6 +14,8 @@ cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="usergroupname"})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, hint="powerlevel"})
+cmd:AddArgument({type=IADM_ARGTYPE_BOOL, optional=true, hint="isadmin"})
+cmd:AddArgument({type=IADM_ARGTYPE_BOOL, optional=true, hint="issuperadmin"})
 
 
 local cmd = IADM:AddCommand("groupdel", function(caller, chat, name)
@@ -32,7 +34,7 @@ cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="usergroupname"})
 
-local cmd = IADM:AddCommand("groupmodify", function(caller, chat, name, arg, value)
+local cmd = IADM:AddCommand("groupmodify", function(caller, chat, name, key, value)
     local success, reason = IADM:ModifyGroup(name, key, value, caller)
 
     if success then
@@ -47,6 +49,8 @@ cmd.Dangerous = true
 cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="usergroupname"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="key"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="value"})
 
 
 local cmd = IADM:AddCommand("setgroup", function(caller, chat, target, group)
@@ -65,3 +69,19 @@ cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="usergroupname"})
+
+local cmd = IADM:AddCommand("groupslist", function(caller, chat, target, group)
+    IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Groups list:")
+    for name,group in SortedPairsByMemberValue(IADM.UserGroups, "powerlevel", true) do
+        PrintTable(group)
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG1, "->\t", name)
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Powerlevel: ", group.powerlevel)
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is admin: ", tobool(group.isadmin))
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is superadmin: ", tobool(group.issuperadmin))
+    end
+end)
+cmd.Name = "Set user group"
+cmd.Desc = "Gives a new rank to selected target(s)."
+cmd.Dangerous = true
+cmd.ChatArg = true
+cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN

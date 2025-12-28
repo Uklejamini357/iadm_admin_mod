@@ -9,11 +9,14 @@ if not IADM then
 
     IADM.BannedPlayers = {}
     IADM.DatabaseDir = "iadm"
+
+    IADM.RegisteredSyncData = {}
+    IADM.InitSyncData = {}
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.3 beta 4"
-IADM.UpdateVer = 8
+IADM.Version = "0.3"
+IADM.UpdateVer = 9
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -67,12 +70,12 @@ function IADM:GetPrefix()
     return istable(p) and p[1] or p
 end
 
-function IADM:Message(ply, chat, ...)
+function IADM:Message(ply, tochat, ...)
     if SERVER then
         if istable(ply) or ply:IsValid() then
             net.Start("iadm_printmsg")
             net.WriteBit(0)
-            net.WriteBit(chat and 1 or 0)
+            net.WriteBit(tochat and 1 or 0)
             net.WriteTable({...})
             net.Send(ply)
         else
@@ -80,7 +83,7 @@ function IADM:Message(ply, chat, ...)
             MsgN()
         end
     elseif CLIENT then
-        if chat then
+        if tochat then
             chat.AddText(...)
         else
             MsgC(...)
@@ -89,12 +92,12 @@ function IADM:Message(ply, chat, ...)
     end
 end
 
-function IADM:MessageWPrefix(ply, chat, ...)
+function IADM:MessageWPrefix(ply, tochat, ...)
     if SERVER then
         if istable(ply) or ply:IsValid() then
             net.Start("iadm_printmsg")
             net.WriteBit(1)
-            net.WriteBit(chat and 1 or 0)
+            net.WriteBit(tochat and 1 or 0)
             net.WriteTable({...})
             net.Send(ply)
         else
@@ -102,7 +105,7 @@ function IADM:MessageWPrefix(ply, chat, ...)
             MsgN()
         end
     elseif CLIENT then
-        if chat then
+        if tochat then
             chat.AddText(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
         else
             MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
@@ -127,6 +130,58 @@ end
 
 function IADM:AddLoadSQL(id, func)
     IADM.SQLDatabasesLoad[id] = func
+end
+
+-- Register each for client and server separately!!
+function IADM:RegisterDataSync(id, func, ...)
+    local tbl = {
+        id = id,
+        Func = func,
+        args = {...}
+    }
+
+    for i,tbl in ipairs(IADM.RegisteredSyncData) do
+        if table.HasValue(tbl, id) then
+            IADM.RegisteredSyncData[i] = tbl
+            return
+        end
+    end
+
+    table.insert(IADM.RegisteredSyncData, tbl)
+end
+
+function IADM:RegisterInitDataSync(id, func, ...)
+    local tbl = {
+        id = id,
+        Func = func,
+        args = {...}
+    }
+
+    for i,tbl in ipairs(IADM.InitSyncData) do
+        if table.HasValue(tbl, id) then
+            IADM.InitSyncData[i] = tbl
+            return
+        end
+    end
+
+    table.insert(IADM.InitSyncData, tbl)
+end
+
+function IADM:PerformDataSync(id, pl, ...)
+    local tbl = {...}
+
+
+end
+
+function IADM:CmdCanTarget(caller, target, ctbl, carg)
+    if ctbl.IgnoreCanTarget then return true end
+    if ctbl.OverrideCanTarget then
+        return ctbl.OverrideCanTarget(caller, target)
+    end
+    local cantarget = ctbl.CanTarget and ctbl.CanTarget(caller, target) or carg.CanTarget and carg.CanTarget(caller, target)
+    if cantarget then return cantarget end
+
+    return target:GetGroupPowerLevel() <= caller:GetGroupPowerLevel()
 end
 
 function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
@@ -182,6 +237,11 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
 
             if isstring(a) or !IsValid(a) or !a:IsPlayer() then
                 IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Player not found!")
+                return
+            end
+
+            if IADM:CmdCanTarget(pl, a, ctbl, carg) then
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", IADM_ECHOCOLOR_ERROR_ARGVAR, a:Nick(), IADM_ECHOCOLOR_ERROR, " cannot be targetted!")
                 return
             end
 
@@ -360,12 +420,25 @@ end, function(cmd, argstr, args)
     local ctbl = IADM.Commands[arg1]
 
     local next = string.sub(argstr, -1, -1) == " " and 1 or 0
-    if ctbl and (#args + next) >= 2 then
+    local currentarg = #args + next
+
+    local islast = true
+    local function add_to_results(...)
+        if islast then
+            table.insert(t, ...)
+        end
+    end
+
+    if ctbl and currentarg >= 2 then
         local i = false
         local s = ""
         local str
-        for count,carg in pairs(ctbl.Args) do
-            if count >= (#args + next) then break end
+        for count,carg in ipairs(ctbl.Args) do
+            if count >= currentarg then break end
+
+            if args[count+1] and not (carg.type == IADM_ARGTYPE_NUM and carg.type == IADM_ARGTYPE_BOOL) then
+                args[count+1] = "\""..args[count+1].."\""
+            end
 
             if !str then
                 str = cmd.." "..arg1..s
@@ -373,39 +446,56 @@ end, function(cmd, argstr, args)
             s = s.." "
 
             local arg = args[count + 1]
+            islast = (count+1)==currentarg
+
+            if (count+next) == currentarg then
+               if arg then
+                   -- s = s..arg
+
+                   if carg.type == IADM_ARGTYPE_STR then
+                       s = s..arg
+                       add_to_results(str..s)
+                   elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
+                       for _,ply in pairs(player.GetAll()) do
+                           if string.find(string_lower(ply:Nick()), string_lower(arg)) then
+                               add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
+                           end
+                       end
+                       -- break
+                   end
+               else
+                   if carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
+                       for _,ply in pairs(player.GetAll()) do
+                           add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
+                       end
+                       -- break
+                   else
+                       local defaulthint = carg.type == IADM_ARGTYPE_NUM and "number" or carg.type == IADM_ARGTYPE_BOOL and "true/false" or "string"
+
+                       s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or defaulthint) or string.format("<%s>", carg.hint or defaulthint))..
+                       (carg.type == IADM_ARGTYPE_BOOL and " [1/0, true/false]" or "")))
+                       add_to_results(str..s)
+                   end
+               end
+            end
 
             if arg then
-                -- s = s..arg
-                if carg.type == IADM_ARGTYPE_STR then
-                    s = s..arg
-                    table.insert(t, str..s)
-                elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                    for _,ply in pairs(player.GetAll()) do
-                        if string.find(string_lower(ply:Nick()), string_lower(arg)) then
-                            table.insert(t, str..s..(string.format("\"%s\"", ply:Nick())))
-                        end
-                    end
-                    break
-                end
-            else
-                if carg.type == IADM_ARGTYPE_STR then
-                    s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or "text") or string.format("<%s>", carg.hint or "text"))))
-                    table.insert(t, str..s)
-                    break
-                elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                    for _,ply in pairs(player.GetAll()) do
-                        table.insert(t, str..s..(string.format("\"%s\"", ply:Nick())))
-                    end
-                    break
-                end
+                s=s..arg
+                -- print(arg)
+                -- continue
             end
+
+            if islast and arg then
+                add_to_results(str..s)
+            end
+
         end
-    elseif (#args + next) < 2 then
+    elseif currentarg < 2 then
         local times = 0
         for k,_ in pairs(IADM.Commands) do
             if string.sub(k, 1, #arg1) ~= arg1 then continue end
             if !IADM:CanUseCommand(CLIENT and LocalPlayer() or !game.IsDedicated() and player.GetAll()[1] or NULL, k) then continue end
-            table.insert(t, cmd.." "..k)
+            add_to_results(cmd.." "..k)
             if times >= 50 then break end
         end
     end
@@ -416,11 +506,84 @@ end, "nil", 0)
 concommand.Add("iadm_changelogs", function(pl)
     if not (SERVER and (pl == NULL or pl:IsListenServerHost()) or CLIENT) then return end
 
+    local col_h1 = Color(255, 224, 224)
+    local col_h2 = Color(255, 240, 240)
     local col_add = Color(155, 244, 110)
     local col_del = Color(244, 54, 44)
     local col_warn = Color(255, 0, 0)
+    local col_change = Color(255, 255, 120)
     local col_fix = Color(86, 209, 239)
-    local change_notes = [[]]
+    local change_notes = [[# v0.3 (#9)
++ Added groupslist commmand, prints out a list of groups in descending order of powerlevel
++ Added goto commmand, teleports to the player.
+
++ Added data networking between server and client
++ Added PLAYER:GetGroupPowerLevel() function for checking player group's power level
+
+
+* Fixed IADM:Message function on client when trying to print a message in chat
+* Fixed PLAYER:GetIADMSessionTime() returning a negative value
+
+/ Significantly improved autocomplete results for console command "iadm"
+
+! Lua folder total size -> 66.6 KB
+
+## v0.3 beta4 (#8):
++ Added infammo command, gives a target infinite ammo by setting their ammo equal to weapon's clip size if ammo reserve is lower than clip size, or also constantly setting weapon's ammo to the max.
++ Added groupdel command, deletes an usergroup.
++ Added groupmodify command, edits an usergroup.
++ Added setgroup command, sets an usergroup for another player.
++ Added map command (again)
+
++ Added BOOL arg type for commands
+
+/ Data loading from SQL should fully work now.
+
+
+## v0.3 beta3 (#7):
++ Added groupadd command, adds a group with name and powerlevel specified.
+
++ Added PowerLevel and usergroups management. Determines the power level for the user/group.
++ Added PLAYER:GetIADMSteamID64(), function only added just in case of any player bots being used for the admin mod.
+
+/ Group module is now fully usable.
+/ Commands now need to have a minimum reached amount of power level in order to use them.
+/ Small changes to core "iadm" console command.
+/ iadm_reset_database should work correctly now, also added a pass check that randomizes itself.
+
+## v0.3 beta2 (#6):
++ Added SQL loading functionality.
++ Added PLAYER:GetIADMSessionTime() function
++ Added iadm_reset_database console command, it only restarts the map. Only usable by the server host.
+In the future version, this concommand deletes the entire database and restarts the map.
+
+- Removed bhop
+
+/ PlayerInit is no longer called for player bots.
+/ On server shutdown/map change, save player data.
+
+## v0.3 beta1 (#5):
++ Added explode command, explodes the target. Violently.
++ Added strip command, removes all weapons from the target.
++ Added bring command, brings the target to you.
++ Added ban command, bans the target for specified amount.
++ Added steamid command, prints out the target's steamid and steamid64.
++ Added time arg type for commands, unfortunately doesn't do anything *yet*
+
++ Added a new prefix (/)
++ Added config
++ Added SQL Database (players, bans, groups)
++ Added bans
++ Added bhop (mistake)
+
+- Removed map command (mistake again)
+
+/ Slightly modified the status command
+/ Improved ents arg type now
+
+! Changes made by mistake were not meant to be included in the admin mod.
+! Bhop is reverted in v0.3 beta2, map command deletion is reverted in v0.3 beta3.
+]]
 
     local tbl = {}
     for i,v in pairs(string.Explode("\n", change_notes)) do
@@ -430,8 +593,14 @@ concommand.Add("iadm_changelogs", function(pl)
             tbl[i] = {col_del, v.."\n"}
         elseif string.sub(v, 1, 1) == "!" then
             tbl[i] = {col_warn, v.."\n"}
+        elseif string.sub(v, 1, 1) == "/" then
+            tbl[i] = {col_change, v.."\n"}
         elseif string.sub(v, 1, 1) == "*" then
             tbl[i] = {col_fix, v.."\n"}
+        elseif string.sub(v, 1, 2) == "##" then
+            tbl[i] = {col_h2, v.."\n"}
+        elseif string.sub(v, 1, 1) == "#" then
+            tbl[i] = {col_h1, v.."\n"}
         else
             tbl[i] = {color_white, v.."\n"}
         end
@@ -443,24 +612,6 @@ concommand.Add("iadm_changelogs", function(pl)
     end
 end)
 
-
-local files = file.Find("iadm/modules/*.lua", "LUA", "sortasc")
-for _,file in ipairs(files) do
-    if string.StartsWith(file, "sv_") then continue end
-    IADM_MODULE_SHOULDINCLUDE = true
-    include("iadm/modules/"..file)
-    IADM_MODULE_SHOULDINCLUDE = nil
-end
-
-files = file.Find("iadm/modules/sv_*.lua", "LUA", "sortasc")
-for _,file in ipairs(files) do
-    IADM_MODULE_SHOULDINCLUDE = true
-    include("iadm/modules/"..file)
-    IADM_MODULE_SHOULDINCLUDE = nil
-end
-
-files = file.Find("iadm/commands/*.lua", "LUA", "sortasc")
-for _,file in ipairs(files) do
-    AddCSLuaFile("iadm/commands/"..file)
-    include("iadm/commands/"..file)
-end
+-- IADM:AddHook("Initialize", "SortRegisterInit", function()
+    -- table.sort(IADM.InitSyncData, function(a,b) return a.id < b.id end)
+-- end)

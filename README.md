@@ -63,17 +63,13 @@ Absolutely not. I have no intentions, nor any plans to make IADM a paid mod, as 
 > Note: This roadmap may not be 100% accurate.
 
 
-v0.2: (DONE)
-- Fix stuffs
-- Add some commands
-- Make some changes
-
 v0.3: (CURRENT)
-- Add SQL database (WIP)
-- Add UserGroups management (WIP)
-- Override ply:IsAdmin() and ply:IsSuperAdmin() functions (WIP)
-- Make lower ranked players unable to target commands on higher ranked players (WIP)
-- Add OverrideCanTarget and CanTarget extensive functionality (WIP)
+- Add SQL database
+- Add UserGroups management
+- Override ply:IsAdmin() and ply:IsSuperAdmin() functions
+- Make lower ranked players unable to target commands on higher ranked players
+- Add OverrideCanTarget and CanTarget extensive functionality
+- Add data sync
 - Implement more commands
 
 v0.4:

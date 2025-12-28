@@ -6,10 +6,10 @@ local cmd = IADM:AddCommand("teleport", function(caller, target)
         target:DropToFloor()
         target:SetVelocity(-target:GetVelocity())
         if caller ~= target then
-            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Teleported ", Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
+            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Teleported ", IADM_ECHOCOLOR_ARG1, target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
         end
     else
-        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, Format("%s are dead!", caller == target and "You" or target:Nick()))
+        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_ERROR, Format("%s dead!", caller == target and "You are" or target:Nick().." is"))
     end
 end)
 cmd.Name = "Teleport"
@@ -17,6 +17,23 @@ cmd.Desc = "Teleports the player to where you are looking."
 cmd.Aliases = {"tp", "tele"}
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
+
+local cmd = IADM:AddCommand("goto", function(caller, target)
+    if target:Alive() then
+        caller:SetPos(target:GetPos()-Angle(0,target:EyeAngles().yaw,0):Forward()*48*(caller:GetModelScale()+target:GetModelScale())/2)
+        caller:SetVelocity(-caller:GetVelocity())
+        caller:SetEyeAngles(target:EyeAngles())
+        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Teleported to ", IADM_ECHOCOLOR_ARG1, target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
+    else
+        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, Format("%s dead!", caller == target and "You are" or target:Nick().." is"))
+    end
+end)
+cmd.Name = "Goto"
+cmd.Desc = "Teleports to the target."
+cmd.Aliases = {"tpto"}
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_PLR})
+cmd.IgnoreCanTarget = true
 
 local cmd = IADM:AddCommand("bring", function(caller, target)
     if caller == target then
@@ -34,7 +51,7 @@ local cmd = IADM:AddCommand("bring", function(caller, target)
         target:SetVelocity(-target:GetVelocity())
         target:SetEyeAngles(ang)
         if caller ~= target then
-            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Teleported ", Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
+            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Teleported ", IADM_ECHOCOLOR_ARG1, target:Nick(), IADM_ECHOCOLOR_TEXT, "!")
         end
     else
         IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, Format("%s dead!", caller == target and "You are" or target:Nick().." is"))
