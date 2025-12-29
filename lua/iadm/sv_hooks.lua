@@ -209,6 +209,27 @@ for i=1,10 do
     pass=pass..string.char(math.random(33,126))
 end
 
+concommand.Add("iadm_god_mode", function(pl, cmd, _, str)
+    if !pl:IsValid() or !pl:IsListenServerHost() then
+        pl:SendLua(string.format([[MsgN("Unknown command: %s")]], cmd))
+        return
+    end
+
+    if !pl.IADM_GodMode then
+        pl.IADM_GodMode = true
+        pl:SendLua([[LocalPlayer().IADM_GodMode = true]])
+        IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "You have enabled godmode.")
+        IADM:Message(pl, true, Color(100,255,255), "Command checks are disabled for you..")
+    else
+        pl.IADM_GodMode = nil
+        pl:SendLua([[LocalPlayer().IADM_GodMode = nil]])
+        IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "You have disabled godmode.")
+        IADM:Message(pl, true, Color(100,255,255), "Command checks are enabled again.")
+    end
+
+end)
+
+
 concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
     if pl:IsValid() and !pl:IsListenServerHost() then return end
 

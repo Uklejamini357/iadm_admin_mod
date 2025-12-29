@@ -24,7 +24,10 @@ for _,name in ipairs(files) do
     if string.StartsWith(name, "sv_") then continue end
     IADM_MODULE_SHOULDINCLUDE = true
     AddCSLuaFile("iadm/modules/"..name)
-    include("iadm/modules/"..name)
+    local MODULE = include("iadm/modules/"..name)
+    if MODULE then
+        MODULE.ID = name
+    end
     if SERVER and file.Exists("iadm/modules/sv_"..name, "LUA") then
         include("iadm/modules/sv_"..name)
     end

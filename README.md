@@ -19,16 +19,17 @@ Use at your own risk.
 
 ### Features:
 - ~~Addons: Any additional commands~~ (NYI)
-- ~~Modules: Turn off any unnecessary features. Only the modules you really need!~~ (NYI)
+- Modules: Turn off any unnecessary features. Only the modules you really need! (WIP)
 - ~~Advanced logging system~~ (NYI)
+- And more!
 
 
 ### Modules:
 - ~~Adverts: Display a repeated sequence of messages being displayed to everyone on the server.~~ (NYI)
 - ~~ChatFilter: Prevent players from saying specific keywords and auto-punish them after certain amount of attempts.~~ (NYI)
-- ~~Groups: Manage.~~ (NYI)
+- Groups: Manage Usergroups with specified powerlevel.
 - HookUtils: Enable specific hook overrides. (WIP)
-- ~~Logging: Log every player action in a log file. (Warning: Some logging options may be resource-intensive)~~ (NYI)
+- Logging: Log every player action in a log file. (Warning: Some logging options may be resource-intensive) (WIP)
 - ~~MOTD: Display a welcome message upon loading in successfully.~~ (NYI)
 - ~~Teams: Sandbox teams like in ULX, but better!~~ (NYI)
 
@@ -63,7 +64,7 @@ Absolutely not. I have no intentions, nor any plans to make IADM a paid mod, as 
 > Note: This roadmap may not be 100% accurate.
 
 
-v0.3: (CURRENT)
+v0.3: (DONE)
 - Add SQL database
 - Add UserGroups management
 - Override ply:IsAdmin() and ply:IsSuperAdmin() functions
@@ -72,8 +73,8 @@ v0.3: (CURRENT)
 - Add data sync
 - Implement more commands
 
-v0.4:
-- Add logging system
+v0.4: (CURRENT)
+- Add logging system (WIP)
 - Make addon more configurable with the config table
 - More commands
 
