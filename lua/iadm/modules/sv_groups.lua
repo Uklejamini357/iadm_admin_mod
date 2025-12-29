@@ -1,5 +1,7 @@
 local MODULE_NAME = "Groups"
 
+if !IADM_MODULE_SHOULDINCLUDE then return end
+
 local function OnFuncSuccess()
     IADM:SyncUserGroupsToClients()
 end
@@ -78,7 +80,7 @@ function IADM:ModifyGroup(name, key, value, caller)
 
     if key == "isadmin" then
         if isnumber(tonumber(value)) then
-            IADM.UserGroups[name].powerlevel = tonumber(value)
+            IADM.UserGroups[name].isadmin = tonumber(value)
             OnFuncSuccess()
             return true
         else
@@ -88,7 +90,7 @@ function IADM:ModifyGroup(name, key, value, caller)
 
     if key == "issuperadmin" then
         if isnumber(tonumber(value)) then
-            IADM.UserGroups[name].powerlevel = tonumber(value)
+            IADM.UserGroups[name].issuperadmin = tonumber(value)
             OnFuncSuccess()
             return true
         else
@@ -96,7 +98,7 @@ function IADM:ModifyGroup(name, key, value, caller)
         end
     end
 
-    return false, "Invalid key!"
+    return false, "Invalid keyvalue to set for the group! Available keys: powerlevel, isadmin, issuperadmin"
 end
 
 function IADM:AddUserToGroup(id64, group, caller)
@@ -150,6 +152,8 @@ IADM:AddSQLDatabase("groups", function(id)
             "VALUES(?, ?, ?, ?, ?, ?, ?)",
             id,
             tbl.powerlevel,
+            tbl.isadmin,
+            tbl.issuperadmin,
             tbl.createdby or "0",
             tbl.lastmodifiedby or "0",
             tbl.lastmodified or ostime,

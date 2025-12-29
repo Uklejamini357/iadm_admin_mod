@@ -60,4 +60,4 @@ end)
 cmd.Name = "Bring"
 cmd.Desc = "Brings the target to you."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
-cmd:AddArgument({type=IADM_ARGTYPE_PLRS, default="^"})
+cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})

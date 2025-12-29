@@ -2,13 +2,12 @@ local MODULE_NAME = "Bans"
 local MODULE = {}
 IADM.Modules[MODULE_NAME] = MODULE
 
-MODULE.ID = "bans"
 MODULE.Name = MODULE_NAME
 MODULE.Description = "Module for managing user bans"
 
-if !IADM_MODULE_SHOULDINCLUDE then return end
+if !IADM_MODULE_SHOULDINCLUDE then return MODULE end
 
-if !SERVER then return end
+if !SERVER then return MODULE end
 
 IADM:AddSQLDatabase("bans", function(id)
     sql.QueryTyped("CREATE TABLE IF NOT EXISTS "..(IADM.DatabaseDir.."_"..id).." ("..
@@ -111,3 +110,5 @@ IADM:AddHook("CheckPassword", "checkBanned", function(steamID64, ipAddress, svPa
         return false, "You are banned!"
     end
 end)
+
+return MODULE

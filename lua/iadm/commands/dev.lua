@@ -7,6 +7,7 @@ end)
 cmd.Name = "Lua"
 cmd.Desc = "Runs a lua code. (Alias of lua_run)"
 cmd.ChatArg = true
+cmd.Dangerous = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="code to run", varargs=true})
 

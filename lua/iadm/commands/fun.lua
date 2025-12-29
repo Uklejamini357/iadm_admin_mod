@@ -10,6 +10,7 @@ local cmd = IADM:AddCommand("kill", function(caller, targets)
 end)
 cmd.Name = "Kill"
 cmd.Desc = "Kills the player."
+cmd.Aliases = {"slay"}
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 
@@ -61,6 +62,7 @@ local cmd = IADM:AddCommand("skill", function(caller, targets)
 end)
 cmd.Name = "Silent Kill"
 cmd.Desc = "Silently kills the player."
+cmd.Aliases = {"sslay"}
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLRS})
 

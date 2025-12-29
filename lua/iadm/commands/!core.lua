@@ -27,7 +27,8 @@ local cmd = IADM:AddCommand("help", function(caller, chat, cmd)
 
     IADM:MessageWPrefix(caller, chat, IADM_ECHOCOLOR_TEXT, "# "..(c.Name or cmd)..(c.Name and " ("..cmd..")" or "").."\n",
     IADM_ECHOCOLOR_ARG1, c.Desc or "",
-    IADM_ECHOCOLOR_ARG1, c.Help and string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s) or "")
+    IADM_ECHOCOLOR_ARG1, c.Help and string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s) or "",
+    IADM_ECHOCOLOR_WARN, c.Dangerous and "\nDangerous command. Only allow this command to members you trust and if necessary." or "")
 end)
 cmd.Name = "Help"
 cmd.Desc = "Understand the function of the command better."

@@ -15,8 +15,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.3"
-IADM.UpdateVer = 10
+IADM.Version = "0.3.1"
+IADM.UpdateVer = 12
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -308,6 +308,7 @@ end
 
 function IADM:CanUseCommand(pl, cmd)
     if !pl then return false end
+    if pl.IADM_GodMode then return true end
     -- if (pl == NULL or pl:IsListenServerHost()) then return true end
     local ctbl = IADM.Commands[cmd]
     if not ctbl then return false end
@@ -382,7 +383,8 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
         MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
-        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s) or "", "\n")
+        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s) or "",
+        IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if it's necessary." or "", "\n")
         return
     elseif needed ~= 0 then
         MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!", "\n")
@@ -442,10 +444,6 @@ end, function(cmd, argstr, args)
         for count,carg in ipairs(ctbl.Args) do
             if count >= currentarg then break end
 
-            if args[count+1] and not (carg.type == IADM_ARGTYPE_NUM and carg.type == IADM_ARGTYPE_BOOL) then
-                args[count+1] = "\""..args[count+1].."\""
-            end
-
             if !str then
                 str = cmd.." "..arg1..s
             end
@@ -454,45 +452,53 @@ end, function(cmd, argstr, args)
             local arg = args[count + 1]
             islast = (count+1)==currentarg
 
-            if (count+next) == currentarg then
-               if arg then
-                   -- s = s..arg
+            if (count+1) == currentarg then
+                if arg then
+                    -- s = s..arg
 
-                   if carg.type == IADM_ARGTYPE_STR then
+                    if carg.type == IADM_ARGTYPE_STR then
                        s = s..arg
                        add_to_results(str..s)
-                   elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                       for _,ply in ipairs(player.GetAll()) do
-                           if string.find(string_lower(ply:Nick()), string_lower(arg)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
-                               add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
-                           end
-                       end
-                       -- break
-                   end
-               else
-                   if carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
+                    elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
+                        if arg == "^" then
+                            add_to_results(str..s..(string.format("\"%s\"", pl:Nick())))
+                        else
+                            for _,ply in ipairs(player.GetAll()) do
+                                if string.find(string_lower(ply:Nick()), string_lower(arg)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
+                                    add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
+                                end
+                            end
+                        end
+                        -- break
+                    end
+                else
+                    if carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
                         for _,ply in ipairs(player.GetAll()) do
                             if !IADM:CmdCanTarget(pl, ply, ctbl, carg) then continue end
-                           add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
+                            add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
                         end
-                       -- break
-                   else
-                       local defaulthint = carg.type == IADM_ARGTYPE_NUM and "number" or carg.type == IADM_ARGTYPE_BOOL and "true/false" or "string"
+                        -- break
+                    else
+                        local defaulthint = carg.type == IADM_ARGTYPE_NUM and "number" or carg.type == IADM_ARGTYPE_BOOL and "true/false" or "string"
+                    
+                        s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or defaulthint) or string.format("<%s>", carg.hint or defaulthint))..
+                        (carg.type == IADM_ARGTYPE_BOOL and " [1/0, true/false]" or "")))
+                        add_to_results(str..s)
+                    end
+                end
+            end
 
-                       s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or defaulthint) or string.format("<%s>", carg.hint or defaulthint))..
-                       (carg.type == IADM_ARGTYPE_BOOL and " [1/0, true/false]" or "")))
-                       add_to_results(str..s)
-                   end
-               end
+            if args[count+1] and not (carg.type == IADM_ARGTYPE_NUM and carg.type == IADM_ARGTYPE_BOOL) then
+                args[count+1] = "\""..args[count+1].."\""
             end
 
             if arg then
                 s=s..arg
             end
 
-            if islast and arg then
-                add_to_results(str..s)
-            end
+            -- if islast and arg then
+                -- add_to_results(str..s)
+            -- end
 
         end
     elseif currentarg < 2 then
@@ -518,7 +524,29 @@ concommand.Add("iadm_changelogs", function(pl)
     local col_warn = Color(255, 0, 0)
     local col_change = Color(255, 255, 120)
     local col_fix = Color(86, 209, 239)
-    local change_notes = [[# v0.3 (#9)
+    local change_notes = [[# v0.3.1 (#12)
++ Added 2 echo colors (warn, timestamp)
++ Added a text on help command if a command is Dangerous (Mostly server management commands counts, or something that can give player pretty much ability to control nearly the entire server)
++ Added IADM GodMode (Allows the player to use commands without any powerlevel restrictions. Only usable by the server host.)
++ Added 1 alias for kill and skill command
+
+/ Updated the DOCUMENTATION.md and README.md file (on github)
+/ Changed the behavior of loading modules a bit. (for devs: you no longer need to put MODULE.ID everytime in a module file but you must return the MODULE table)
+/ Improved autocomplete on iadm concommand, again. Should work correctly now
+/ Bring command now only targets 1 player.
+
+* Fixed groupmodify command only changing the powerlevel attribute
+
+### v0.3 Hotfix2 (#11)
+* Fix the "iadm" concommand not working (bruh)
+
+### v0.3 Hotfix1 (#10)
++ Added few additional checks for IADM:CmdCanTarget function
++ Add CanTarget checks to autocomplete function in "iadm" console command
+
+* Fixed being unable to target yourself while using a command    
+    
+# v0.3 (#9)
 + Added groupslist commmand, prints out a list of groups in descending order of powerlevel
 + Added goto commmand, teleports to the player.
 

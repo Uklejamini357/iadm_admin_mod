@@ -1,5 +1,23 @@
 # Changelogs for IADM
 
+
+# v0.3.1 (#12)
++ Added 2 echo colors (warn, timestamp)
++ Added a text on help command if a command is Dangerous (Mostly server management commands counts, or something that can give player pretty much ability to control nearly the entire server)
++ Added IADM GodMode (Allows the player to use commands without any powerlevel restrictions. Only usable by the server host.)
++ Added 1 alias for kill and skill command
+
+/ Updated the DOCUMENTATION.md and README.md file (on github)
+/ Changed the behavior of loading modules a bit. (for devs: you no longer need to put MODULE.ID everytime in a module file but you must return the MODULE table)
+/ Improved autocomplete on iadm concommand, again. Should work correctly now
+/ Bring command now only targets 1 player.
+
+* Fixed groupmodify command only changing the powerlevel attribute
+
+
+### v0.3 Hotfix2 (#11)
+* Fix the "iadm" concommand not working (bruh)
+
 ### v0.3 Hotfix1 (#10)
 + Added few additional checks for IADM:CmdCanTarget function
 + Add CanTarget checks to autocomplete function in "iadm" console command

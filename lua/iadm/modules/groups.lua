@@ -2,12 +2,11 @@ local MODULE_NAME = "Groups"
 local MODULE = {}
 IADM.Modules[MODULE_NAME] = MODULE
 
-MODULE.ID = "groups"
 MODULE.Name = MODULE_NAME
 MODULE.Description = "Main module for managing groups"
 MODULE.Required = true
 
-if !IADM_MODULE_SHOULDINCLUDE then return end
+if !IADM_MODULE_SHOULDINCLUDE then return MODULE end
 
 
 if not IADM.UserGroups then
@@ -37,7 +36,7 @@ if not player then return end
 
 function player:IsAdmin()
     local usergroup = IADM.UserGroups[self:GetUserGroup()]
-    return usergroup.isadmin or usergroup.issuperadmin
+    return usergroup.isadmin or self:IsSuperAdmin()
 end
 
 function player:IsSuperAdmin()
@@ -45,3 +44,4 @@ function player:IsSuperAdmin()
     return usergroup.issuperadmin
 end
 
+return MODULE

@@ -73,7 +73,6 @@ cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="usergroupname"})
 local cmd = IADM:AddCommand("groupslist", function(caller, chat, target, group)
     IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Groups list:")
     for name,group in SortedPairsByMemberValue(IADM.UserGroups, "powerlevel", true) do
-        PrintTable(group)
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG1, "->\t", name)
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Powerlevel: ", group.powerlevel)
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is admin: ", tobool(group.isadmin))
