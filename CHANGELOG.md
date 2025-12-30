@@ -1,54 +1,72 @@
 # Changelogs for IADM
 
 
+## v0.4 beta1 (#13)
++ Added logs module, a real-time logging module tracking player actions. Currently it logs the following: 
+player deaths, player connect, player disconnect, player say, 
+spawnprop, spawnragdoll, spawneffect, spawnnpc, spawnsent, spawnvehicle, spawnswep, giveswep 
+and toolgun usage<br>
++ Add viewlogs command, lets you view recently logged events that took place in current session<br>
++ Added 3 global echocolors, mostly for logging.<br>
+
+/ Changed Godmode text a bit<br>
+
+* Fixed suggesting unavailable commands upon attempting to run an unknown command<br>
+* Fixed groups module not working as intended<br>
+* Fixed being able to delete "user" group<br>
+
+
+! WARNING: Srlion's Hook Library is required for this module, otherwise expect lua errors and logging events failing!<br>
+
+
 # v0.3.1 (#12)
-+ Added 2 echo colors (warn, timestamp)
-+ Added a text on help command if a command is Dangerous (Mostly server management commands counts, or something that can give player pretty much ability to control nearly the entire server)
-+ Added IADM GodMode (Allows the player to use commands without any powerlevel restrictions. Only usable by the server host.)
-+ Added 1 alias for kill and skill command
++ Added 2 echo colors (warn, timestamp)<br>
++ Added a text on help command if a command is Dangerous (Mostly server management commands counts, or something that can give player pretty much ability to control nearly the entire server)<br>
++ Added IADM GodMode (Allows the player to use commands without any powerlevel restrictions. Only usable by the server host.)<br>
++ Added 1 alias for kill and skill command<br>
 
-/ Updated the DOCUMENTATION.md and README.md file (on github)
-/ Changed the behavior of loading modules a bit. (for devs: you no longer need to put MODULE.ID everytime in a module file but you must return the MODULE table)
-/ Improved autocomplete on iadm concommand, again. Should work correctly now
-/ Bring command now only targets 1 player.
+/ Updated the DOCUMENTATION.md and README.md file (on github)<br>
+/ Changed the behavior of loading modules a bit. (for devs: you no longer need to put MODULE.ID everytime in a module file but you must return the MODULE table)<br>
+/ Improved autocomplete on iadm concommand, again. Should work correctly now<br>
+/ Bring command now only targets 1 player.<br>
 
-* Fixed groupmodify command only changing the powerlevel attribute
+* Fixed groupmodify command only changing the powerlevel attribute<br>
 
 
 ### v0.3 Hotfix2 (#11)
-* Fix the "iadm" concommand not working (bruh)
+* Fix the "iadm" concommand not working (bruh)<br>
 
 ### v0.3 Hotfix1 (#10)
-+ Added few additional checks for IADM:CmdCanTarget function
-+ Add CanTarget checks to autocomplete function in "iadm" console command
++ Added few additional checks for IADM:CmdCanTarget function<br>
++ Add CanTarget checks to autocomplete function in "iadm" console command<br>
 
-* Fixed being unable to target yourself while using a command
+* Fixed being unable to target yourself while using a command<br>
 
 # v0.3 (#9)
-+ Added groupslist commmand, prints out a list of groups in descending order of powerlevel
-+ Added goto commmand, teleports to the player.
++ Added groupslist commmand, prints out a list of groups in descending order of powerlevel<br>
++ Added goto commmand, teleports to the player.<br>
 
-+ Added data networking between server and client
-+ Added PLAYER:GetGroupPowerLevel() function for checking player group's power level
++ Added data networking between server and client<br>
++ Added PLAYER:GetGroupPowerLevel() function for checking player group's power level<br>
 
 
-* Fixed IADM:Message function on client when trying to print a message in chat
-* Fixed PLAYER:GetIADMSessionTime() returning a negative value
+* Fixed IADM:Message function on client when trying to print a message in chat<br>
+* Fixed PLAYER:GetIADMSessionTime() returning a negative value<br>
 
-/ Significantly improved autocomplete results for console command "iadm"
+/ Significantly improved autocomplete results for console command "iadm"<br>
 
-! Lua folder total size -> 66.6 KB
+! Lua folder total size -> 66.6 KB<br>
 
 ## v0.3 beta4 (#8):
-+ Added infammo command, gives a target infinite ammo by setting their ammo equal to weapon's clip size if ammo reserve is lower than clip size, or also constantly setting weapon's ammo to the max.
-+ Added groupdel command, deletes an usergroup.
-+ Added groupmodify command, edits an usergroup.
-+ Added setgroup command, sets an usergroup for another player.
-+ Added map command (again)
++ Added infammo command, gives a target infinite ammo by setting their ammo equal to weapon's clip size if ammo reserve is lower than clip size, or also constantly setting weapon's ammo to the max.<br>
++ Added groupdel command, deletes an usergroup.<br>
++ Added groupmodify command, edits an usergroup.<br>
++ Added setgroup command, sets an usergroup for another player.<br>
++ Added map command (again)<br>
 
-+ Added BOOL arg type for commands
++ Added BOOL arg type for commands<br>
 
-/ Data loading from SQL should fully work now.
+/ Data loading from SQL should fully work now.<br>
 
 
 ## v0.3 beta3 (#7):

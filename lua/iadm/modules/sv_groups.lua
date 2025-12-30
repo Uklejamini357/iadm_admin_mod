@@ -10,6 +10,8 @@ function IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, createdby)
     if IsValid(createdby) then createdby = createdby:GetIADMSteamID64()
     elseif type(createdby) ~= "string" then return false, "Invalid caller!" end
 
+    if IADM.UserGroups[name] then return false, "This group already exists!" end
+
     local ostime = os.time()
     local tbl = {
         powerlevel = powerlevel,
@@ -23,7 +25,8 @@ function IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, createdby)
     }
     IADM.UserGroups[name] = tbl
 
-    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) VALUES(?, ?, ?, ?, ?, ?, ?)",
+    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
+    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
         name,
         powerlevel,
         isadmin,
@@ -45,6 +48,8 @@ function IADM:RemoveGroup(name, caller)
     elseif type(caller) ~= "string" then return false, "Invalid caller!" end
 
     if !IADM.UserGroups[name] then return false, "This group doesn't exist!" end
+    if name == "user" then return false, "Deleting this group would result in catastrophic damage!" end
+
     IADM.UserGroups[name] = nil
     for _,ply in ipairs(player.GetAll()) do
         if !ply:IsUserGroup(name) then continue end
@@ -54,7 +59,7 @@ function IADM:RemoveGroup(name, caller)
     local db = IADM.DatabaseDir.."_groups"
     sql.QueryTyped("DELETE FROM "..db.." WHERE name=?", name)
 
-    local db = IADM.DatabaseDir.."_players"
+    local db = IADM.DatabaseDir.."_users"
     sql.QueryTyped("UPDATE "..db.." SET groupname='user' WHERE groupname=?", name)
 
     OnFuncSuccess()
@@ -148,8 +153,8 @@ IADM:AddSQLDatabase("groups", function(id)
 
         if !shouldcreate then continue end
 
-        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
-            "VALUES(?, ?, ?, ?, ?, ?, ?)",
+        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
+            "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
             id,
             tbl.powerlevel,
             tbl.isadmin,

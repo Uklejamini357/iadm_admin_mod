@@ -219,12 +219,12 @@ concommand.Add("iadm_god_mode", function(pl, cmd, _, str)
         pl.IADM_GodMode = true
         pl:SendLua([[LocalPlayer().IADM_GodMode = true]])
         IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "You have enabled godmode.")
-        IADM:Message(pl, true, Color(100,255,255), "Command checks are disabled for you..")
+        IADM:Message(pl, true, Color(100,255,255), "Permission checks are disabled for you..")
     else
         pl.IADM_GodMode = nil
         pl:SendLua([[LocalPlayer().IADM_GodMode = nil]])
         IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "You have disabled godmode.")
-        IADM:Message(pl, true, Color(100,255,255), "Command checks are enabled again.")
+        IADM:Message(pl, true, Color(100,255,255), "Permission checks are enabled again.")
     end
 
 end)
