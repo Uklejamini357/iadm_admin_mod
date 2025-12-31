@@ -26,7 +26,7 @@ for _,name in ipairs(files) do
     AddCSLuaFile("iadm/modules/"..name)
     local MODULE = include("iadm/modules/"..name)
     if MODULE then
-        MODULE.ID = name
+        MODULE.ID = string.sub(name, 1, -5)
     end
     if SERVER and file.Exists("iadm/modules/sv_"..name, "LUA") then
         include("iadm/modules/sv_"..name)

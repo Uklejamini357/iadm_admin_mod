@@ -6,7 +6,6 @@ MODULE.Name = MODULE_NAME
 MODULE.Required = true
 
 if !IADM_MODULE_SHOULDINCLUDE then return MODULE end
-AddCSLuaFile()
 
 IADM:AddHook("PhysgunPickup", "PlayerPickup", function(pl, ent)
     if pl:IsAdmin() and ent:IsPlayer() then

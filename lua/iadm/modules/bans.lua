@@ -31,13 +31,13 @@ function IADM:CanBeBanned(id64)
 end
 
 function IADM:AddBan(id64, reason, duration, bannedby)
-    if IsValid(id64) then id64 = id64:GetIADMSteamID64()
+    if IsValid(id64) then id64 = id64:SteamID64()
     elseif type(id64) ~= "string" then return false, "Invalid user!" end
     if IsValid(bannedby) then bannedby = bannedby:GetIADMSteamID64()
-    elseif type(bannedby) ~= "string" then bannedby = bannedby:GetIADMSteamID64() return false, "Invalid user banning the target!" end
+    elseif type(bannedby) ~= "string" and bannedby ~= NULL then return false, "Invalid user banning the target!" end
 
     if id64 == bannedby then return false, "You cannot ban yourself!" end
-    if !IADM:CanBeBanned(id64) then return false, "Target is immune to being banned!" end
+    if !IADM:CanBeBanned(id64) then return false, "This target is immune to being banned!" end
 
 
     local ply = player.GetBySteamID64(id64)
@@ -47,39 +47,44 @@ function IADM:AddBan(id64, reason, duration, bannedby)
     local endban = duration == 0 and 0 or (start + duration)
 
     local dbname = IADM.DatabaseDir.."_bans"
+    local sqlname = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", bannedby)
+    local banname = IsValid(player.GetBySteamID64(bannedby)) and player.GetBySteamID64(bannedby):Name() or sqlname and sqlname[1].name or "Console"
+    local bannedbyid = IsValid(bannedby) and bannedby:SteamID64() or bannedby == NULL and "0" or bannedby
     local tbl = {
         banstart = start,
         banend = endban,
         duration = duration,
         reason = reason,
-        bannedby = bannedby,
+        bannedby = bannedbyid,
+        bannedbyname = banname
     }
     IADM.BannedPlayers[id64] = tbl
 
-    if !ply:IsValid() or !ply:IsBot() then
-        sql.QueryTyped("INSERT INTO "..dbname.." (id64, banstart, banend, duration, reason, bannedby) VALUES (?, ?, ?, ?, ?, ?)",
+    if !ply:IsValid() or !isbot then
+        sql.QueryTyped("INSERT INTO "..dbname.." (id64, banstart, banend, duration, reason, bannedby, bannedbyname) VALUES (?, ?, ?, ?, ?, ?, ?)",
             id64,
             start,
             endban,
             duration,
             reason,
-            bannedby
+            bannedby,
+            banname
         )
     end
 
     if IsValid(ply) then
-        ply:Kick(IADM:GetBanReason(id64))
+        ply:Kick(IADM:GetBanReason(id64, true))
 
-        if isbot then
-            IADM.BannedPlayers[id64] = {}
+        if isbot then -- don't actually ban bots since if they do it can be problematic
+            IADM.BannedPlayers[id64] = nil
         end
     end
 
     return true
 end
 
-function IADM:GetBanReason(id64)
-    if not IADM:IsPlayerBanned(id64) then return "null" end
+function IADM:GetBanReason(id64, bypass)
+    if !bypass and not IADM:IsPlayerBanned(id64) then return "null" end
     local bantbl = IADM.BannedPlayers[id64]
     local r = [[You are banned!
 
@@ -89,8 +94,8 @@ Unbanned in: %time%]]
 
     r = string.Replace(r, "%reason%", bantbl.reason)
     r = string.Replace(r, "%time%", bantbl.banend == 0 and "Never" or string.NiceTime(bantbl.banend - os.time()))
-    -- r = string.Replace(r, "%bannedbyname%", bantbl.bannedby)
-    -- r = string.Replace(r, "%bannedbyid%", bantbl.bannedbyname)
+    r = string.Replace(r, "%bannedbyname%", bantbl.bannedbyname)
+    r = string.Replace(r, "%bannedbyid%", bantbl.bannedby)
 
 
     return r

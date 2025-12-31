@@ -11,22 +11,59 @@ cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="reason", optional=true, varargs=tr
 cmd.RequireHigherPowerLevel = true
 
 local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
-    local success, err = IADM:AddBan(target:GetIADMSteamID64(), reason, duration, caller:GetIADMSteamID64()) -- steamid64 else it won't work
+    local success, err
+    if IADM.AddBan then
+        success, err = IADM:AddBan(target, reason, duration, caller:GetIADMSteamID64()) -- steamid64 else it won't work
+    else
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Bans module is disabled! Use ", IADM_ECHOCOLOR_ERROR_ARGVAR, "kick", IADM_ECHOCOLOR_ERROR, " command instead or enable bans module instead!")
+        return
+    end
 
     if success then
         IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " was ", Color(255,0,0), "banned", IADM_ECHOCOLOR_TEXT, "! (", Color(255,128,0), reason, IADM_ECHOCOLOR_TEXT, ")")
     else
         IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, err, "!")
     end
-
 end)
 cmd.Name = "Ban"
 cmd.Desc = "Bans the target for a specified amount of time."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
-cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=""})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=true})
 cmd.RequireHigherPowerLevel = true
+--[[
+local cmd = IADM:AddCommand("mute", function(caller, target, duration, reason)
+end)
+cmd.Name = "Mute"
+cmd.Desc = "Prevents the target from communating in text and voice chat."
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_PLR})
+cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=true})
+cmd.RequireHigherPowerLevel = true
+
+local cmd = IADM:AddCommand("chatmute", function(caller, target, duration, reason)
+end)
+cmd.Name = "Chat Mute"
+cmd.Desc = "Prevents the target from typing in chat."
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_PLR})
+cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=true})
+cmd.RequireHigherPowerLevel = true
+
+local cmd = IADM:AddCommand("vcmute", function(caller, target, duration, reason)
+end)
+cmd.Name = "Voice Mute"
+cmd.Desc = "Prevents the target from talking in voice chat."
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
+cmd.Aliases = {"gag"}
+cmd:AddArgument({type=IADM_ARGTYPE_PLR})
+cmd:AddArgument({type=IADM_ARGTYPE_TIME, default=0, hint="duration (0 = permanent)"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, default="No reason provided", varargs=true})
+cmd.RequireHigherPowerLevel = true
+]]
 
 local cmd = IADM:AddCommand("csay", function(caller, text)
     -- local tbl = string.Explode("%#", text)
@@ -103,3 +140,13 @@ cmd.Name = "SteamID"
 cmd.Desc = "Get your, or another target's steam ID"
 cmd:AddArgument({type=IADM_ARGTYPE_PLR, default="^"})
 cmd.IgnoreCanTarget = true
+
+local cmd = IADM:AddCommand("cleardecals", function(caller)
+    BroadcastLua([[game.RemoveRagdolls() RunConsoleCommand("r_cleardecals")]])
+
+    IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Cleaned up all clientside decals and ragdolls!")
+end)
+cmd.Name = "Clear decals"
+cmd.Desc = "Cleans up all clientside decals and ragdolls for everyone"
+cmd.Aliases = {"cleanupdecals", "decals"}
+cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN

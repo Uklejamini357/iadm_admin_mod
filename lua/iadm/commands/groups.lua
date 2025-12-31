@@ -54,7 +54,7 @@ cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="value"})
 
 
 local cmd = IADM:AddCommand("setgroup", function(caller, chat, target, group)
-    local success, reason = IADM:AddUserToGroup(target:SteamID64(), group, caller:SteamID64())
+    local success, reason = IADM:AddUserToGroup(target, group, caller)
 
     if success then
         IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Set ", IADM_ECHOCOLOR_ARG1, target, IADM_ECHOCOLOR_TEXT, "'s usergroup to ", IADM_ECHOCOLOR_ARG2, group, IADM_ECHOCOLOR_TEXT,  "!")

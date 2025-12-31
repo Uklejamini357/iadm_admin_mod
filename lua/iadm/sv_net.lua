@@ -30,10 +30,36 @@ net.Receive("iadm_command", function(len, pl)
 end)
 
 
+if not IADM.ServerStartTime then
+    IADM.ServerStartTime = SysTime()
+end
+
+IADM:AddHook("Initialize", "TrackServerStartTime", function()
+    IADM.ServerInitTime = SysTime()
+end, HOOK_MONITOR_HIGH)
+
+local loadingsteamid64 = {}
+gameevent.Listen("player_connect")
+IADM:AddHook("player_connect", "OnPlayerConnectSteamID64", function(data)
+    if data.bot then return end
+    loadingsteamid64[util.SteamIDTo64(data.networkid)] = SysTime()
+end)
+
+gameevent.Listen("player_disconnect")
+IADM:AddHook("player_disconnect", "OnPlayerDisconnectSteamID64", function(data)
+    if data.bot then return end
+    loadingsteamid64[util.SteamIDTo64(data.networkid)] = nil
+end)
+
 -- Player Initialization
 net.Receive("iadm_playerinit", function(len, pl)
     local phasetoload = net.ReadUInt(8)
 
+    if pl.IADM_InitPhase == 1 then
+        hook.Run("IADMPlrInit", pl, math.Round(SysTime() - (loadingsteamid64[pl:SteamID64()] or IADM.ServerInitTime), 2), math.Round(SysTime() - IADM.ServerStartTime, 2))
+
+        loadingsteamid64[pl:SteamID64()] = nil
+    end
     if pl.IADM_InitPhase and pl.IADM_InitPhase == phasetoload then
         net.Start("iadm_playerinit")
         net.WriteUInt(phasetoload, 8)

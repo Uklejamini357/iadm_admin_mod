@@ -106,11 +106,13 @@ function IADM:ModifyGroup(name, key, value, caller)
     return false, "Invalid keyvalue to set for the group! Available keys: powerlevel, isadmin, issuperadmin"
 end
 
-function IADM:AddUserToGroup(id64, group, caller)
-    local ply
+function IADM:AddUserToGroup(ply, group, caller)
     if !IADM.UserGroups[group] then return false, "This group doesn't exist!" end
 
-    local ply = player.GetBySteamID64(id64)
+    if ply == caller and IADM.UserGroups[group].powerlevel < ply:GetGroupPowerLevel() and !ply.IADM_GodMode then
+        return false, "You cannot set yourself to a lower level group as you might lose important permissions!"
+    end
+
     local db = IADM.DatabaseDir.."_users"
     if IsValid(ply) then
         ply:SetUserGroup(group)

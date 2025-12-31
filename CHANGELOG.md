@@ -1,6 +1,44 @@
 # Changelogs for IADM
 
 
+## v0.4 beta2 (#14)
++ Added IADM_GROUP_POWER_GODMODE, set at 1 million powerlevel. Commands with this powerlevel requirement require you to have IADM GODMODE ENABLED.
++ Added a Chat Mute check for players.
++ Added load time check for players.
+
++ Expanded "viewlogs" command, now allows you to view recently logged events by action
++ Added "viewfulllogs" command, allows you to view any logged events that took place on the server, even outside the current session.
++ Added "deletelogs" command. Currently, this deletes the entire logs. Only if you want to save some space and don't care about the history.
++ Added "cleardecals" command, cleans up all clientside decals and ragdolls.
+
++ Added table for RecentLogsByAction. Same as RecentLogs, except it also logs.
++ Added svstart logging event, logs every time when the server starts up/loads a new map.
++ Added svstop logging event, logs every time when the server shuts down. WARNING: It is not logged if the server is force closed or if the server crashes.
++ Added botspawn logging event, same as plrconnect but for bots only.
++ Added plrinitspawn logging event, logs once the player spawns in the first time in their current session.
++ Added plrloadingend logging event, logs once the player has fully loaded!
++ Added botkick logging event, logs once the bot player is kicked from the server!
+
+/ ArgType TIME should work now, but don't expect it to be functional as intended<br>
+/ ArgType BOOL now works<br>
+/ IADM:LogAction will be registered as an empty function if the logs module is not enabled.<br>
+/ Foreign Keys should now always remain enabled (I hope this works)<br>
+/ Changed some text for concommand iadm_reset_database<br>
+/ Changed logs table column from "type" to "action"<br>
+/ Changed playerdeath logging event a bit<br>
+/ Changed plrconnect event to only log for non-bot players<br>
+/ Changed plrdisconnect event to only log for non-bot players<br>
+
+* Fixed Module ID's having ".lua" at the end
+* Fixed being unable to target yourself with commands that usually require higher power level to use
+* Fixed carg.min and carg.max not working
+* Fixed SQL table issue on sv_hooks.lua:19
+* Fixed the setgroup command
+* Fixed ban command not working
+* (Temporary fix) Fixed ban reasons not displaying bannedbyname and bannedbyid correctly.
+* Fixed being able to demote yourself, which could result in losing important permissions!
+
+
 ## v0.4 beta1 (#13)
 + Added logs module, a real-time logging module tracking player actions. Currently it logs the following: 
 player deaths, player connect, player disconnect, player say, 

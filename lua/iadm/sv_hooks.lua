@@ -16,7 +16,7 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
         ply.IADM_spawntime = SysTime() -- using SysTime cuz there's no other way to Calculate CurTime() without timescale 
 
         if !isbot then
-            sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users"..
+            sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users "..
                 "SET name=?, lastseen=? WHERE ID=?",
                 ply:Name(),
                 os.time(),
@@ -77,6 +77,8 @@ IADM:AddSQLDatabase("users", function(id)
 end)
 
 IADM:AddHook("Initialize", "SQLDatabaseInit", function()
+    sql.QueryTyped("PRAGMA foreign_keys = ON") -- enable it since having it disabled can be an issue
+
     for id,func in pairs(IADM.SQLDatabases) do
         func(id)
     end
@@ -202,7 +204,26 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
         end
     end)
     if silent then return "" end
-end, HOOK_NORMAL)
+end, PRE_HOOK_RETURN)
+
+IADM:AddHook("PlayerSay", "MuteCheck", function(pl, text)
+    local timeleft = math.max(pl.IADMChatMuted or 0, pl.IADMMuted or 0) - os.time()
+    if timeleft < 0 then return end
+
+    IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "You are ", IADM_ECHOCOLOR_ERROR_ARGVAR, "muted", IADM_ECHOCOLOR_ERROR, "! Time remaining: ", IADM_ECHOCOLOR_ERROR_REASON, string.NiceTime(timeleft))
+    return ""
+end, HOOK_HIGH)
+
+-- another check if they somehow manage to bypass mute
+IADM:AddHook("PlayerSay", "MuteCheck2", function(tbl, pl, text)
+    if tbl[2] == "" then return end
+    local timeleft = math.max(pl.IADMChatMuted or 0, pl.IADMMuted or 0) - os.time()
+    if timeleft < 0 then return end
+
+    IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "You are ", IADM_ECHOCOLOR_ERROR_ARGVAR, "muted", IADM_ECHOCOLOR_ERROR, "! Time remaining: ", IADM_ECHOCOLOR_ERROR_REASON, string.NiceTime(timeleft))
+    return ""
+end, POST_HOOK_RETURN)
+
 
 local pass="I want to confirm deletion of the IADM database. "
 for i=1,10 do
@@ -235,10 +256,11 @@ concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
 
     local p = pass
     if str ~= pass and str == "" then
-        IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "This command is only for the use of development purposes.")
+        IADM:Message(pl, true, Color(255,255,155), "[WARNING] ", Color(100,255,255), "This command is only for the use of development purposes or if migrating.")
+        IADM:Message(pl, true, Color(100,255,255), "In the future, an export/import tool will be added.")
         IADM:Message(pl, true, Color(255,255,55), "To delete your IADM database, type in the following:")
         IADM:Message(pl, true, Color(255,128,0), cmd, " ", pass)
-        IADM:Message(pl, true, Color(190,0,0), "[CRITICAL WARNING] BACKUP YOUR sv.db BEFORE DOING IT OR YOU RISK PERMANENT DATA DELETION!")
+        IADM:Message(pl, true, Color(190,0,0), "[CRITICAL WARNING] This deletes EVERYTHING! BACKUP YOUR sv.db BEFORE DOING IT OR YOU RISK PERMANENT DATA DELETION!")
         return
     elseif str ~= pass and str ~= "" then
         IADM:Message(pl, true, Color(190,0,0), "Invalid.")

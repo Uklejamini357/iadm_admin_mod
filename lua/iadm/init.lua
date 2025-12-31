@@ -15,8 +15,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.3.1"
-IADM.UpdateVer = 12
+IADM.Version = "0.4 beta2"
+IADM.UpdateVer = 14
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -183,7 +183,7 @@ function IADM:CmdCanTarget(caller, target, ctbl, carg)
     local cantarget = ctbl.CanTarget and ctbl.CanTarget(caller, target) or carg.CanTarget and carg.CanTarget(caller, target)
     if cantarget then return cantarget end
 
-    if ctbl.RequireHigherPowerLevel or carg.RequireHigherPowerLevel then return target:GetGroupPowerLevel() < caller:GetGroupPowerLevel() end
+    if caller ~= target and ctbl.RequireHigherPowerLevel or carg.RequireHigherPowerLevel then return target:GetGroupPowerLevel() < caller:GetGroupPowerLevel() end
     if caller == target then return true end
     return target:GetGroupPowerLevel() <= caller:GetGroupPowerLevel()
 end
@@ -284,16 +284,31 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             a = tonumber(a)
             if a then
                 if carg.min then
-                    math.max(carg.min, a)
+                    a = math.max(carg.min, a)
                 end
 
                 if carg.max then
-                    math.min(carg.max, a)
+                    a = math.min(carg.max, a)
                 end
             else
                 IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Invalid number!")
                 return
             end
+            args[count] = a
+        elseif carg.type == IADM_ARGTYPE_TIME then
+            a = tonumber(a)
+            if a then
+                if carg.min then
+                    a = math.max(carg.min, a)
+                end
+
+                if carg.max then
+                    a = math.min(carg.max, a)
+                end
+            end
+            args[count] = a
+        elseif carg.type == IADM_ARGTYPE_BOOL then
+            a = tobool(a)
             args[count] = a
         elseif carg.type == IADM_ARGTYPE_STR then
             if a == "" then
@@ -496,11 +511,6 @@ end, function(cmd, argstr, args)
             if arg then
                 s=s..arg
             end
-
-            -- if islast and arg then
-                -- add_to_results(str..s)
-            -- end
-
         end
     elseif currentarg < 2 then
         local times = 0
@@ -569,6 +579,7 @@ toolgun usage
     end
 end)
 
--- IADM:AddHook("Initialize", "SortRegisterInit", function()
-    -- table.sort(IADM.InitSyncData, function(a,b) return a.id < b.id end)
--- end)
+if not IADM.LogAction then
+    function IADM:LogAction() -- add an empty function just in case
+    end
+end

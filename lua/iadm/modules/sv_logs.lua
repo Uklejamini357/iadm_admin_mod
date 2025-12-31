@@ -4,6 +4,7 @@ if !IADM_MODULE_SHOULDINCLUDE then return end
 
 if not IADM.RecentLogs then
     IADM.RecentLogs = {}
+    IADM.RecentLogsByAction = {}
     IADM.LogFunc = {}
     IADM.LoggingEnabled = true
 end
@@ -39,13 +40,15 @@ function IADM:LogAction(action, ...)
         MsgC(IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, unpack(strortbl))
         MsgN()
         table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = str})
+        table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str})
     else
         MsgC(IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, strortbl)
         MsgN()
         table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = strortbl})
+        table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str})
     end
 
-    sql.QueryTyped("INSERT INTO iadm_logs(type, str, time) "..
+    sql.QueryTyped("INSERT INTO iadm_logs(action, str, time) "..
         "VALUES (?, ?, ?)",
         action,
         str,
@@ -55,6 +58,7 @@ end
 
 function IADM:RegisterLogAction(action, callback)
     self.LogFunc[action] = callback
+    self.RecentLogsByAction[action] = self.RecentLogsByAction[action] or {}
 
     return self.LogFunc[action]
 end
@@ -64,18 +68,34 @@ IADM:AddSQLDatabase("logs", function(id)
 
     sql.QueryTyped("CREATE TABLE IF NOT EXISTS "..db.." ("..
         "id INTEGER PRIMARY KEY AUTOINCREMENT, ".. -- idk why tf AUTO_INCREMENT doesn't work here
-        "type CHAR(63), "..
+        "action CHAR(63), "..
         "str VARCHAR(1024), "..
         "time INT UNSIGNED"..
     ")")
 end)
+
+IADM:RegisterLogAction("svstart", function(map)
+    return IADM_ECHOCOLOR_TEXT, "Server initialized! Current map: ", IADM_ECHOCOLOR_ARG1, map
+end)
+
+IADM:AddHook("Initialize", "LogSvStart", function()
+    IADM:LogAction("svstart", game.GetMap())
+end, HOOK_MONITOR_HIGH)
+
+IADM:RegisterLogAction("svstop", function(map)
+    return IADM_ECHOCOLOR_TEXT, "Server is closing (or changing map)"
+end)
+
+IADM:AddHook("ShutDown", "LogSvStop", function()
+    IADM:LogAction("svstop")
+end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("playerdeath", function(pl, attacker, inflictor)
     if pl == attacker then
         if inflictor ~= attacker then
             return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " suicided! (using ", IADM_ECHOCOLOR_ARG3, inflictor, IADM_ECHOCOLOR_TEXT, ")"
         else
-            return IADM_ECHOCOLOR_ARG1, pl, " suicided!"
+            return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " suicided!"
         end
     end
 
@@ -146,10 +166,11 @@ IADM:RegisterLogAction("plrgiveswep", function(pl, weapon)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " gave ", IADM_ECHOCOLOR_ARG2, weapon, IADM_ECHOCOLOR_TEXT, " to themselves"
 end)
 
-IADM:AddHook("PlayerGiveSWEP", "LogGiveSWEP", function(pl, weapon)
+IADM:AddHook("PlayerGiveSWEP", "LogGiveSWEP", function(tbl, pl, weapon)
+    if not tbl[2] then return end
     if pl:HasWeapon(weapon) then return end
     IADM:LogAction("plrgiveswep", pl, weapon)
-end, HOOK_MONITOR_LOW)
+end, POST_HOOK)
 
 IADM:RegisterLogAction("plrspawnvehicle", function(pl, model)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned vehicle ", IADM_ECHOCOLOR_ARG2, string.format("%s [%d]"), IADM_ECHOCOLOR_TEXT, " with model ", IADM_ECHOCOLOR_ARG3, ent:GetModel()
@@ -177,30 +198,57 @@ IADM:AddHook("PlayerSay", "LogPlayerSay", function(tbl, pl, text, onteam)
     IADM:LogAction("plrsaychat", pl, text, onteam)
 end, POST_HOOK)
 
-IADM:RegisterLogAction("plrconnect", function(name, steamid64, bot)
-    if bot then
-        return IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " has connected"
-    end
-
-    return IADM_ECHOCOLOR_ARG1, string.format("%s [%s]", name, steamid64), IADM_ECHOCOLOR_TEXT, " has connected"
+IADM:RegisterLogAction("plrconnect", function(name, steamid64)
+    return IADM_ECHOCOLOR_ARG1, string.format("%s (%s)", name, steamid64), IADM_ECHOCOLOR_TEXT, " has connected"
 end)
 
 gameevent.Listen("player_connect")
 IADM:AddHook("player_connect", "LogPlayerConnect", function(data)
-    IADM:LogAction("plrconnect", data.name, util.SteamIDTo64(data.networkid), data.bot)
+    if data.bot then return end
+    IADM:LogAction("plrconnect", data.name, util.SteamIDTo64(data.networkid))
 end)
 
-IADM:RegisterLogAction("plrdisconnect", function(name, steamid64, reason, bot)
-    if bot then
-        return IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " has disconnected (Reason: ", IADM_ECHOCOLOR_ARG2, reason, IADM_ECHOCOLOR_TEXT, ")"
-    end
+IADM:RegisterLogAction("botspawn", function(name)
+    return IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " has spawned"
+end)
 
-    return IADM_ECHOCOLOR_ARG1, string.format("%s [%s]", name, steamid64), IADM_ECHOCOLOR_TEXT, " has disconnected (Reason: ", IADM_ECHOCOLOR_ARG2, reason, IADM_ECHOCOLOR_TEXT, ")"
+IADM:AddHook("PlayerInitialSpawn", "LogBotSpawn", function(pl)
+    if !pl:IsBot() then return end
+    IADM:LogAction("botspawn", pl:Name())
+end, PRE_HOOK)
+
+IADM:RegisterLogAction("plrinitspawn", function(pl)
+    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " has spawned"
+end)
+
+IADM:AddHook("PlayerInitialSpawn", "LogPlayerInitSpawn", function(pl)
+    if pl:IsBot() then return end
+    IADM:LogAction("plrinitspawn", pl)
+end, PRE_HOOK)
+
+IADM:RegisterLogAction("plrloadingend", function(pl, time)
+    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " has finished loading! (took ", IADM_ECHOCOLOR_ARG2, time.." seconds", IADM_ECHOCOLOR_TEXT, ")"
+end)
+
+IADM:AddHook("IADMPlrInit", "LogPlayerFullyLoaded", function(pl, time)
+    IADM:LogAction("plrloadingend", pl, time)
+end)
+
+IADM:RegisterLogAction("plrdisconnect", function(name, steamid64, reason)
+    return IADM_ECHOCOLOR_ARG1, string.format("%s (%s)", name, steamid64), IADM_ECHOCOLOR_TEXT, " has disconnected (", IADM_ECHOCOLOR_ARG2, reason, IADM_ECHOCOLOR_TEXT, ")"
+end)
+
+IADM:RegisterLogAction("botkick", function(name, steamid64, reason)
+    return IADM_ECHOCOLOR_ARG1, string.format("%s (%s)", name, steamid64), IADM_ECHOCOLOR_TEXT, " has disconnected (", IADM_ECHOCOLOR_ARG2, reason, IADM_ECHOCOLOR_TEXT, ")"
 end)
 
 gameevent.Listen("player_disconnect")
 IADM:AddHook("player_disconnect", "LogPlayerDisonnect", function(data)
-    IADM:LogAction("plrdisconnect", data.name, util.SteamIDTo64(data.networkid), data.reason, data.bot)
+    if tobool(data.bot) then
+        IADM:LogAction("botkick", data.name, util.SteamIDTo64(data.networkid), data.reason)
+    else
+        IADM:LogAction("plrdisconnect", data.name, util.SteamIDTo64(data.networkid), data.reason)
+    end
 end)
 
 IADM:RegisterLogAction("plrusetool", function(pl, tool)
