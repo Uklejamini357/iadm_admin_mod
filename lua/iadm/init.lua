@@ -15,8 +15,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.4 beta2"
-IADM.UpdateVer = 14
+IADM.Version = "0.4 beta3"
+IADM.UpdateVer = 15
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -39,8 +39,7 @@ function IADM:AddCommand(cmd, func, t)
 
     cmd = string_lower(cmd)
 
-    local tbl = {}
-    tbl = setmetatable(tbl, meta)
+    tbl = setmetatable({}, meta)
     IADM.Commands[cmd] = tbl
     IADM.Commands[cmd].Func = func
     IADM.Commands[cmd].Args = {}
@@ -49,21 +48,96 @@ function IADM:AddCommand(cmd, func, t)
     return IADM.Commands[cmd]
 end
 
-function IADM:AddConfig(id, name, category, configtype, default, desc)
+local m = {}
+local meta = {}
+meta.__index = m
+
+local m2 = {}
+local meta2 = {}
+meta2.__index = m2
+
+
+function m2:GetConfigValue()
+    if self.SetValue ~= nil then
+        return self.SetValue
+    end
+
+    return self.Default
+end
+meta2.GetConfigValue = m2.GetConfigValue
+
+local numid = 1
+function m:AddConfigOption(id, name, desc, default, configtype)
     id = string_lower(id)
 
-    IADM.Config[category] = {}
-    IADM.Config[category][name] = {}
-    local tbl = IADM.Config[category][name]
-
-    tbl.category = category
-    tbl.desc = desc
-    tbl.default = default
-    tbl.configtype = configtype
-
+    tbl = setmetatable({}, meta2)
+    self.Options[id] = tbl
+    tbl.ID = numid
+    numid = numid + 1
+    tbl.Name = name
+    tbl.Desc = desc
+    tbl.Default = default
+    tbl.SetValue = default
+    tbl.ConfigType = configtype
+    
 
     return tbl
 end
+meta.AddConfigOption = m.AddConfigOption
+
+function m:GetConfigValue(name)
+    local tbl = self.Options[name]
+    if tbl.SetValue ~= nil then
+        return tbl.SetValue
+    end
+
+    return tbl.Default
+end
+meta.GetConfigValue = m.GetConfigValue
+
+function m:GetConfigTable(name)
+    return self.Options[name]
+end
+meta.GetConfigTable = m.GetConfigTable
+
+function m:CanViewConfig(pl)
+    return self.Powerlevel >= pl:GetGroupPowerLevel()
+end
+meta.CanViewConfig = m.CanViewConfig
+
+function m:CanEditConfig(pl)
+    return self.Powerlevel >= pl:GetGroupPowerLevel()
+end
+meta.CanEditConfig = m.CanEditConfig
+
+function IADM:AddConfigCategory(id, name, powerlevel)
+    id = string_lower(id)
+
+    tbl = setmetatable({}, meta)
+    IADM.Config[id] = tbl
+    tbl.Name = name
+    tbl.ViewPowerlevel = powerlevel or IADM_GROUP_POWER_SUPERADMIN -- use it so anyone with equal or higher power level can view these configs 
+    tbl.Powerlevel = powerlevel or IADM_GROUP_POWER_SUPERADMIN -- same as above but for config editing purposes
+    tbl.Options = {}
+
+    return tbl
+end
+
+function IADM:GetConfigCategoryTable(id)
+    return self.Config[id]
+end
+
+function IADM:GetConfigCategoryTableByName(name)
+    for _,tbl in pairs(self.Config) do
+        if tbl.Name == name then
+            return tbl
+        end
+    end
+
+    return {}
+end
+
+
 
 function IADM:GetPrefix()
     local p = IADM.Prefix
@@ -321,6 +395,41 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
     return args
 end
 
+function IADM:ProcessCfgArgs(pl, ctbl, str)
+    if ctbl.ConfigType == IADM_ARGTYPE_NUM then
+        str = tonumber(str)
+
+        if str then
+            if ctbl.min then
+                str = math.max(ctbl.min, str)
+            end
+
+            if ctbl.max then
+                str = math.min(ctbl.max, str)
+            end
+        else
+            IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "Invalid number!")
+            return
+        end
+    elseif ctbl.ConfigType == IADM_ARGTYPE_BOOL then
+        if str=="true" or str=="1" then
+            str = true
+        elseif str=="false" or str=="0" then
+            str = false
+        else
+            IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "Invalid value! Use true/false or 1/0!")
+            return
+        end
+    elseif ctbl.ConfigType == IADM_ARGTYPE_STR then
+        if str == "" then
+            IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "String cannot be empty!")
+            return
+        end
+    end
+
+    return str
+end
+
 function IADM:CanUseCommand(pl, cmd)
     if !pl then return false end
     if pl.IADM_GodMode then return true end
@@ -353,7 +462,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
             end
         end
 
-        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, c, "\n")
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, c)
         return
     end
 
@@ -371,11 +480,11 @@ concommand.Add("iadm", function(pl, cmd, args, str)
         for k,_ in SortedPairs(IADM.Commands) do
             if string.sub(k, 1, #cmd) ~= cmd then continue end
             if !IADM:CanUseCommand(pl) then continue end
-            MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?\n")
+            IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?")
             return
         end
 
-        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".\n")
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".")
         return
     end
 
@@ -397,13 +506,13 @@ concommand.Add("iadm", function(pl, cmd, args, str)
             end
         end
 
-        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
         IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s) or "",
-        IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if it's necessary." or "", "\n")
+        IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if it's necessary." or "")
         return
     elseif needed ~= 0 then
-        MsgC(IADM_ECHOCOLOR_PREFIX, prefix, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!", "\n")
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!")
         return
     end
 
@@ -522,6 +631,223 @@ end, function(cmd, argstr, args)
         end
     end
 
+    return t
+end, "nil", 0)
+
+concommand.Add("iadm_config", function(pl, cmd, args, str)
+    local prefix = "[IADM] "
+    local iterfunc, tbl = pairs(IADM.Config)
+
+    if #args == 0 then
+        local c = 0
+        for _,ctbl in iterfunc, tbl do
+            c = c + 1
+        end
+
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "No config selected. Currently available config options: (", IADM_ECHOCOLOR_ARG1, c, IADM_ECHOCOLOR_TEXT, ")")
+        
+        for id,ctbl in iterfunc, tbl do
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ARG2, "\t-> ", IADM_ECHOCOLOR_ARG3, ctbl.Name, IADM_ECHOCOLOR_TEXT, " (", IADM_ECHOCOLOR_ARG2, id, IADM_ECHOCOLOR_TEXT, ")")
+        end
+
+        return
+    end
+
+    cfg = string_lower(args[1] or "")
+
+    local ctbl = IADM.Config[cfg]
+    if !ctbl then
+        for k,_ in SortedPairs(IADM.Config) do
+            if string.sub(k, 1, #cfg) ~= cfg then continue end
+            -- if !IADM:CanUseCommand(pl) then continue end
+            IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Invalid config setting ", IADM_ECHOCOLOR_ARG1, cfg, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?")
+            return
+        end
+
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Invalid config option ", IADM_ECHOCOLOR_ARG1, cfg, IADM_ECHOCOLOR_TEXT, ".")
+        return
+    end
+
+    local option = args[2]
+    if not option then
+        IADM:Message(pl, false, IADM_ECHOCOLOR_TEXT, "This configuration has a set of ", IADM_ECHOCOLOR_ARG1, table.Count(ctbl.Options), IADM_ECHOCOLOR_TEXT, " options available.")
+        IADM:Message(pl, false, IADM_ECHOCOLOR_TEXT, "Available options:")
+        for id,tbl in SortedPairs(ctbl.Options) do
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ARG1, "\t--> ", IADM_ECHOCOLOR_ARG2, tbl.Name or "No name.", " ", IADM_ECHOCOLOR_ARG2, "(", IADM_ECHOCOLOR_ARG3, id, IADM_ECHOCOLOR_ARG2, ")")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ARG2, "\t\t-> ", IADM_ECHOCOLOR_ARG3, tbl.Desc or "No description available.")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ARG2, "\t\t-> ", IADM_ECHOCOLOR_ARG3, "Value set to: ", IADM_ECHOCOLOR_ARG1, ctbl:GetConfigValue(id))
+        end
+
+        return
+    end
+
+    args[1] = nil
+    args[2] = nil
+
+
+    local new_args = {}
+    for _,text in pairs(args) do
+        table.insert(new_args, text)
+    end
+    args = new_args
+
+
+
+
+    if CLIENT then
+        net.Start("iadm_playereditconfig")
+        net.WriteString(cfg)
+        net.WriteString(option)
+        net.WriteTable(args)
+        net.SendToServer()
+    elseif SERVER then
+        local ctbl = IADM:GetConfigCategoryTable(cfg)
+	    if !ctbl then return end
+
+        if !ctbl:CanViewConfig(pl) then
+            IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions to view this configuration!")
+            pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
+            return
+        end
+
+        local modtbl = ctbl:GetConfigTable(option)
+        if !modtbl then
+            IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Invalid option ", IADM_ECHOCOLOR_ERROR_ARGVAR, option, IADM_ECHOCOLOR_ERROR, "!")
+            return
+        end
+
+        str = ""
+        for i=1,#args do
+            str = str..(str=="" and "" or " ")..args[i]
+        end
+
+        if str == "" then
+            IADM:Message(pl, false, IADM_ECHOCOLOR_TEXT, "Configuration ", IADM_ECHOCOLOR_ARG1, option, IADM_ECHOCOLOR_TEXT, " in config category ", IADM_ECHOCOLOR_ARG2, cfg, IADM_ECHOCOLOR_TEXT, " is set to: ", IADM_ECHOCOLOR_ARG3, modtbl:GetConfigValue())
+            IADM:Message(pl, false, IADM_ECHOCOLOR_TEXT, "Name: ", IADM_ECHOCOLOR_ARG1, modtbl.Name)
+            IADM:Message(pl, false, IADM_ECHOCOLOR_TEXT, "Desc: ", IADM_ECHOCOLOR_ARG1, modtbl.Desc)
+            return
+        end
+
+        if !ctbl:CanEditConfig(pl) then
+            IADM:Message(pl, true, IADM_ECHOCOLOR_ERROR, "Insufficient permissions to edit this configuration!")
+            pl:SendLua([[surface.PlaySound("buttons/button11.wav")]])
+            return
+        end
+
+        str = IADM:ProcessCfgArgs(pl, modtbl, str)
+        if str == nil then return end
+
+        modtbl.SetValue = str
+        IADM:Message(pl, true, IADM_ECHOCOLOR_TEXT, "Config set to ", IADM_ECHOCOLOR_ARG1, tostring(str), IADM_ECHOCOLOR_TEXT, "!")
+
+        local saved = sql.QueryTyped("SELECT * FROM iadm_config WHERE id=?", option)[1]
+        if saved then
+            sql.QueryTyped("UPDATE iadm_config SET savedvalue=?, lastmodifiedby=?, timemodified=? WHERE id=?",
+                tostring(str),
+                IADM:GetSteamID64(pl),
+                os.time(),
+                option
+            )
+        else
+            sql.QueryTyped("INSERT INTO iadm_config(id, savedvalue, powerlevel, viewpowerlevel, lastmodifiedby, timemodified) VALUES(?, ?, ?, ?, ?)",
+                option,
+                tostring(str),
+                modtbl.Powerlevel,
+                modtbl.ViewPowerlevel,
+                IADM:GetSteamID64(pl),
+                os.time()
+            )
+        end
+    end
+end, function(cmd, argstr, args)
+    local pl = CLIENT and LocalPlayer() or !game.IsDedicated() and player.GetAll()[1] or NULL
+    local t = {}
+    local arg1 = string_lower(args[1] or "")
+    local arg2 = string_lower(args[2] or "")
+    local ctbl = IADM.Config[arg1]
+
+--[[
+
+    local next = string.sub(argstr, -1, -1) == " " and 1 or 0
+    local currentarg = #args + next
+
+    local islast = true
+    local function add_to_results(...)
+        if islast then
+            table.insert(t, ...)
+        end
+    end
+
+    if ctbl and currentarg >= 2 then
+        local i = false
+        local s = ""
+        local str
+        for count,carg in ipairs(ctbl.Options) do
+            if count >= currentarg then break end
+
+            if !str then
+                str = cmd.." "..arg1..s
+            end
+            s = s.." "
+
+            local arg = args[count + 1]
+            islast = (count+1)==currentarg
+
+            if (count+1) == currentarg then
+                if arg then
+                    -- s = s..arg
+
+                    if carg.type == IADM_ARGTYPE_STR then
+                       s = s..arg
+                       add_to_results(str..s)
+                    elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
+                        if arg == "^" then
+                            add_to_results(str..s..(string.format("\"%s\"", pl:Nick())))
+                        else
+                            for _,ply in ipairs(player.GetAll()) do
+                                if string.find(string_lower(ply:Nick()), string_lower(arg)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
+                                    add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
+                                end
+                            end
+                        end
+                        -- break
+                    end
+                else
+                    if carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
+                        for _,ply in ipairs(player.GetAll()) do
+                            if !IADM:CmdCanTarget(pl, ply, ctbl, carg) then continue end
+                            add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
+                        end
+                        -- break
+                    else
+                        local defaulthint = carg.type == IADM_ARGTYPE_NUM and "number" or carg.type == IADM_ARGTYPE_BOOL and "true/false" or "string"
+                    
+                        s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or defaulthint) or string.format("<%s>", carg.hint or defaulthint))..
+                        (carg.type == IADM_ARGTYPE_BOOL and " [1/0, true/false]" or "")))
+                        add_to_results(str..s)
+                    end
+                end
+            end
+
+            if args[count+1] and not (carg.type == IADM_ARGTYPE_NUM and carg.type == IADM_ARGTYPE_BOOL) then
+                args[count+1] = "\""..args[count+1].."\""
+            end
+
+            if arg then
+                s=s..arg
+            end
+        end
+    elseif currentarg < 2 then
+        local times = 0
+        for k,_ in pairs(IADM.Config) do
+            if string.sub(k, 1, #arg1) ~= arg1 then continue end
+            if !IADM:CanUseCommand(pl, k) then continue end
+            add_to_results(cmd.." "..k)
+            if times >= 50 then break end
+        end
+    end
+
+]]
     return t
 end, "nil", 0)
 

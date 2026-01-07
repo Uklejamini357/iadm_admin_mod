@@ -1,3 +1,12 @@
+function IADM:GetSteamID64(pl)
+    if IsValid(pl) then
+        return pl:IsBot() and "1" or pl:SteamID64()
+    end
+
+    return "0"
+end
+
+
 local meta_ply = FindMetaTable("Player")
 if meta_ply then
     function meta_ply:IADMMessage(chat, ...)
@@ -13,7 +22,7 @@ if meta_ply then
 
     local M_SteamID64 = meta_ply.SteamID64
     function meta_ply:GetIADMSteamID64()
-        return self:IsBot() and "1" or M_SteamID64(self)
+        return IADM:GetSteamID64(self)
     end
 
     function meta_ply:GetGroupPowerLevel()

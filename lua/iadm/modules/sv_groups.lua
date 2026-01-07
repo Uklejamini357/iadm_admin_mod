@@ -18,22 +18,20 @@ function IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, createdby)
         createdby = createdby,
         isadmin = isadmin,
         issuperadmin = issuperadmin,
-        lastmodified = ostime,
         lastmodifiedby = createdby,
         timecreated = ostime,
         timemodified = ostime,
     }
     IADM.UserGroups[name] = tbl
 
-    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
-    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, timecreated, timemodified) "..
+    "VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
         name,
         powerlevel,
         isadmin,
         issuperadmin,
         createdby,
         tbl.lastmodifiedby,
-        tbl.lastmodified,
         tbl.timecreated,
         tbl.timemodified
     )
@@ -139,7 +137,6 @@ IADM:AddSQLDatabase("groups", function(id)
         "issuperadmin BOOLEAN, "..
         "createdby BIGINT, "..
         "lastmodifiedby BIGINT, "..
-        "lastmodified INT UNSIGNED, "..
         "timecreated INT UNSIGNED, "..
         "timemodified INT UNSIGNED"..
     ")")
@@ -155,15 +152,14 @@ IADM:AddSQLDatabase("groups", function(id)
 
         if !shouldcreate then continue end
 
-        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
-            "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, timecreated, timemodified) "..
+            "VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
             id,
             tbl.powerlevel,
             tbl.isadmin,
             tbl.issuperadmin,
             tbl.createdby or "0",
             tbl.lastmodifiedby or "0",
-            tbl.lastmodified or ostime,
             tbl.timecreated or ostime,
             tbl.timemodified or ostime
         )

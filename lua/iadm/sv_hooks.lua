@@ -17,7 +17,7 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
 
         if !isbot then
             sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users "..
-                "SET name=?, lastseen=? WHERE ID=?",
+                "SET name=?, lastseen=? WHERE id64=?",
                 ply:Name(),
                 os.time(),
                 id64
@@ -74,6 +74,39 @@ IADM:AddSQLDatabase("users", function(id)
         "playtime INT UNSIGNED, "..
         "lastseen INT UNSIGNED"..
     ")")
+end)
+
+IADM:AddSQLDatabase("config", function(id)
+    sql.QueryTyped("CREATE TABLE IF NOT EXISTS iadm_config ("..
+        "id VARCHAR(40) PRIMARY KEY, "..
+        "savedvalue VARCHAR(65535), ".. -- i don't even know which value to set it to, so frick it
+        "powerlevel SMALLINT, "..
+        "viewpowerlevel SMALLINT, "..
+        "lastmodifiedby BIGINT, "..
+        "timemodified INT UNSIGNED"..
+    ")")
+end)
+
+IADM:AddLoadSQL("config", function(id)
+    local tbl = sql.QueryTyped("SELECT * FROM iadm_config")
+
+    if !tbl then return end
+
+    -- unoptimal, I know. it's only for what i could have managed for now though.
+    for _,v in ipairs(tbl) do
+        for _,cfg in pairs(IADM.Config) do
+            local dobreak
+            for id,_ in pairs(cfg) do
+                if v.id == id then
+                    cfg.SetValue = tbl.savedvalue
+                    cfg.Powerlevel = tbl.powerlevel
+                    dobreak = true
+                    break
+                end
+            end
+            if dobreak then break end
+        end
+    end
 end)
 
 IADM:AddHook("Initialize", "SQLDatabaseInit", function()
