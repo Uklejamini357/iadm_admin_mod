@@ -95,16 +95,11 @@ IADM:AddLoadSQL("config", function(id)
     -- unoptimal, I know. it's only for what i could have managed for now though.
     for _,v in ipairs(tbl) do
         for _,cfg in pairs(IADM.Config) do
-            local dobreak
-            for id,_ in pairs(cfg) do
-                if v.id == id then
-                    cfg.SetValue = tbl.savedvalue
-                    cfg.Powerlevel = tbl.powerlevel
-                    dobreak = true
-                    break
-                end
-            end
-            if dobreak then break end
+            local edit = cfg.Options[v.id]
+            edit.Powerlevel = v.powerlevel
+            edit.ViewPowerlevel = v.viewpowerlevel
+
+            edit.SetValue = IADM:ProcessStr(v.savedvalue, edit.ConfigType)
         end
     end
 end)

@@ -1,6 +1,26 @@
 # Changelogs for IADM
 
 
+## Fixes (#16)
++ Added IADM:ProcessArgs function
+
+/ Adjusted loading sql for config a bit
+
+* Fixed config sql data not loading
+
+## v0.4 beta3 (#15)
++ Added new argtype value IADM_ARGTYPE_TBL altho it will be fully implemented in the future
++ Made config possible to edit and is viewable
++ Added logging config
++ Added SQL for config (be aware that this only accepts non-identical id's even from different categories!)
++ Logging for certain types can now be toggled!
++ Added IADM:GetSteamID64 function (in case if the player using the command is not valid when trying to grab steamid64)
+
+- Remove the lastmodified key from iadm_groups SQL table (Duplicate of timemodified)
+
+* Fixed sql error on (key case differences)
+
+
 ## v0.4 beta2 (#14)
 + Added IADM_GROUP_POWER_GODMODE, set at 1 million powerlevel. Commands with this powerlevel requirement require you to have IADM GODMODE ENABLED.
 + Added a Chat Mute check for players.

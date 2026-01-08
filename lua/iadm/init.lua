@@ -16,7 +16,7 @@ end
 
 IADM.Prefix = {"!", "/"}
 IADM.Version = "0.4 beta3"
-IADM.UpdateVer = 15
+IADM.UpdateVer = 16
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -424,6 +424,20 @@ function IADM:ProcessCfgArgs(pl, ctbl, str)
         if str == "" then
             IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "String cannot be empty!")
             return
+        end
+    end
+
+    return str
+end
+
+function IADM:ProcessStr(str, argtype)
+    if argtype == IADM_ARGTYPE_NUM then
+        str = tonumber(str)
+    elseif argtype == IADM_ARGTYPE_BOOL then
+        if str=="true" or str=="1" then
+            str = true
+        elseif str=="false" or str=="0" then
+            str = false
         end
     end
 
