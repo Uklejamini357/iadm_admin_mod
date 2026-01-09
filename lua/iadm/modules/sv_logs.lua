@@ -7,6 +7,7 @@ if not IADM.RecentLogs then
     IADM.RecentLogsByAction = {}
     IADM.LogFunc = {}
     IADM.LoggingEnabled = true
+    IADM.MonitorLog = {}
 end
 
 local cfg = IADM:AddConfigCategory("logs_options", "Logs", IADM_GROUP_POWER_SUPERADMIN)
@@ -14,6 +15,7 @@ local cfg = IADM:AddConfigCategory("logs_options", "Logs", IADM_GROUP_POWER_SUPE
 local function IsLogEnabled(id)
     return cfg:GetConfigValue("log_toggle_"..id)
 end
+
 
 function IADM:LogAction(action, ...)
     if !self.LogFunc[action] then return end
@@ -45,15 +47,31 @@ function IADM:LogAction(action, ...)
             str = str..txt
         end
 
-        MsgC(IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, unpack(strortbl))
+        local s = {IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, unpack(strortbl)}
+        MsgC(unpack(s))
         MsgN()
         table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = str})
         table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str})
+
+        for ply,monitoringtbl in pairs(IADM.MonitorLog) do
+            if !IsValid(ply) then IADM.MonitorLog[ply] = nil continue end
+            if monitoringtbl == "all" or table.HasValue(monitoringtbl, action) then
+                IADM:Message(ply, false, unpack(s))
+            end
+        end
     else
-        MsgC(IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, strortbl)
+        local s = {IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, strortbl}
+        MsgC(unpack(s))
         MsgN()
         table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = strortbl})
         table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str})
+
+        for ply,monitoringtbl in pairs(IADM.MonitorLog) do
+            if !IsValid(ply) then IADM.MonitorLog[ply] = nil continue end
+            if monitoringtbl == "all" or table.HasValue(monitoringtbl, action) then
+                IADM:Message(ply, false, unpack(s))
+            end
+        end
     end
 
     sql.QueryTyped("INSERT INTO iadm_logs(action, str, time) "..

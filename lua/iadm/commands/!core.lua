@@ -45,6 +45,7 @@ local cmd = IADM:AddCommand("status", function(caller, chat)
     local admins = 0
     local bots = #player.GetBots()
     local maxplayers = game.MaxPlayers()
+    local operating_os = system.IsWindows() and "Windows" or system.IsLinux() and "Linux" or system.IsOSX() and "OSX" or "NULL" 
 
     for _,ply in pairs(players) do
         if ply:IsAdmin() or ply:IsSuperAdmin() then
@@ -53,6 +54,7 @@ local cmd = IADM:AddCommand("status", function(caller, chat)
     end
 
     IADM:Message(caller, chat, col, "--- SERVER STATUS ---")
+    IADM:Message(caller, chat, col, string.format("OS: %s", operating_os))
     IADM:Message(caller, chat, col, string.format("Uptime: %02d:%02d:%02d:%02d", (uptime/86400), (uptime/3600)%24, (uptime/60)%60, uptime%60), " ",
     string.format("(%02d:%02d:%02d:%02d on a current map)", (realtime/86400), (realtime/3600)%24, (realtime/60)%60, realtime%60))
     IADM:Message(caller, chat, col, string.format("Players: %d/%d%s", #players, maxplayers,

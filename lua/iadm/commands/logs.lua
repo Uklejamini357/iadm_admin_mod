@@ -57,10 +57,14 @@ local cmd = IADM:AddCommand("viewfulllogs", function(caller, logtype, page)
 
     local logs
     if logtype == "all" then
-        logs = sql.QueryTyped("SELECT * FROM iadm_logs ORDER BY id DESC")
+        logs = sql.QueryTyped("SELECT * FROM iadm_logs ORDER BY id DESC LIMIT ?,50",
+            count1
+        )
     else
-        logs = sql.QueryTyped("SELECT * FROM iadm_logs WHERE action=? ORDER BY id DESC",
-        logtype)
+        logs = sql.QueryTyped("SELECT * FROM iadm_logs WHERE action=? ORDER BY id DESC LIMIT ?,50",
+            logtype,
+            count1
+        )
     end
 
     if !logs or logtype == "list" then
@@ -81,9 +85,7 @@ local cmd = IADM:AddCommand("viewfulllogs", function(caller, logtype, page)
         return
     end
     IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "Entries ", IADM_ECHOCOLOR_ARG1, count1, IADM_ECHOCOLOR_LOGTEXT, "-", IADM_ECHOCOLOR_ARG2, count2, IADM_ECHOCOLOR_LOGTEXT, ", out of ", IADM_ECHOCOLOR_ARG3, maxcount)
-    for i=count2,count1,-1 do
-        local v = logs[i]
-        if !v then continue end
+    for i,v in ipairs(tbl) do
         IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%Y-%m-%d %H:%M:%S", v.time), " ", IADM_ECHOCOLOR_LOGTYPE, v.action or "unknown", IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, v.str)
     end
 end)
@@ -120,3 +122,60 @@ cmd.Desc = "Deletes logs. Something you don't want to do normally."
 cmd.Dangerous = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_GODMODE
 cmd:AddArgument({type=IADM_ARGTYPE_STR, optional=true, hint="confirm", varargs=true})
+
+
+local confirm
+local cmd = IADM:AddCommand("monitorlogs", function(caller, logtype, toggle)
+    if caller == NULL or caller:IsListenServerHost() then
+        IADM:Message(caller, true, "You are already monitoring the server logs by default!")
+        return
+    end
+    local tbl = IADM.MonitorLog[caller]
+
+    if !tbl then
+        tbl = {}
+        IADM.MonitorLog[caller] = tbl
+    end
+
+    if logtype == "all" then
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ARG1, toggle and "Now" or "No longer", IADM_ECHOCOLOR_TEXT, " monitoring ", IADM_ECHOCOLOR_ARG2, "everything")
+        if toggle then
+            tbl = "all"
+        else
+            tbl = nil
+        end
+        IADM.MonitorLog[caller] = tbl
+        return
+    end
+
+    if tbl == "all" then
+        return
+    end
+
+    if !IADM.LogFunc[logtype] then
+        IADM:Message(caller, true, IADM_ECHOCOLOR_ERROR, "Invalid logtype.")
+        return
+    end
+
+    if toggle then
+        if table.HasValue(tbl, logtype) then
+            IADM:Message(caller, true, IADM_ECHOCOLOR_ERROR, "Logtype ", IADM_ECHOCOLOR_ERROR_ARGVAR, logtype, IADM_ECHOCOLOR_ERROR, " already enabled!")
+            return
+        end
+        table.insert(tbl, logtype)
+    else
+        if !table.HasValue(tbl, logtype) then
+            IADM:Message(caller, true, IADM_ECHOCOLOR_ERROR, "Logtype ", IADM_ECHOCOLOR_ERROR_ARGVAR, logtype, IADM_ECHOCOLOR_ERROR, " not enabled!")
+            return
+        end
+        table.RemoveByValue(tbl, logtype)
+    end
+
+    IADM.MonitorLog[caller] = tbl
+    IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ARG1, toggle and "Now" or "No longer", IADM_ECHOCOLOR_TEXT, " monitoring ", IADM_ECHOCOLOR_ARG2, logtype)
+end)
+cmd.Name = "Monitor logs"
+cmd.Desc = "Monitors logs."
+cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
+cmd:AddArgument({type=IADM_ARGTYPE_STR, optional=true, hint="logtype"})
+cmd:AddArgument({type=IADM_ARGTYPE_BOOL, optional=true, hint="toggle"})
