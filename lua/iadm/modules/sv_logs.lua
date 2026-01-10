@@ -140,9 +140,9 @@ function IADM:LogAction(action, ...)
 		
 		IADM.RecentLogs[IADM.LastLogRecentId].count = IADM.RecentLogs[IADM.LastLogRecentId].count + 1
 		IADM.RecentLogsByAction[action][IADM.LastLogRecentIdAction].count = IADM.RecentLogsByAction[action][IADM.LastLogRecentIdAction].count + 1
-		sql.QueryTyped("UPDATE iadm_logs SET count=? WHERE str=?",
+		sql.QueryTyped("UPDATE iadm_logs SET count=? WHERE id=?",
 			IADM.LastLogCount,
-			str
+			IADM.LastLogSQLId
 		)
 	else
 		sql.QueryTyped("INSERT INTO iadm_logs(action, str, time, count) "..
@@ -164,6 +164,7 @@ function IADM:LogAction(action, ...)
     local id = sql.QueryTyped("SELECT id FROM iadm_logs ORDER BY id DESC LIMIT 1")
     if id and id[1] then
         t.id = id[1].id
+		IADM.LastLogSQLId = t.id
     end
 
     timer.Create(timerhandler, 0, 1, function()
