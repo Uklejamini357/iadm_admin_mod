@@ -571,7 +571,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
         IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
-        IADM_ECHOCOLOR_ARG1, string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s),
+        IADM_ECHOCOLOR_ARG1, string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s),
         IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if it's necessary." or "")
         return
     elseif needed ~= 0 then

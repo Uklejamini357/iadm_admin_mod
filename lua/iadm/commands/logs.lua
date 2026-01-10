@@ -144,6 +144,14 @@ local cmd = IADM:AddCommand("monitorlogs", function(caller, logtype, toggle)
         IADM.MonitorLog[caller] = tbl
     end
 
+    if logtype == "list" then
+		IADM:Message(caller, true, IADM_ECHOCOLOR_TEXT, "List of log types that can be monitored: ", IADM_ECHOCOLOR_ARG1, "(Shows in console)")
+		for id,_ in SortedPairs(IADM.LogFunc) do
+			IADM:Message(caller, false, IADM_ECHOCOLOR_ARG2, "\t-> ", IADM_ECHOCOLOR_ARG1, id)
+		end
+		return
+	end
+
     if logtype == "all" then
         IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ARG1, toggle and "Now" or "No longer", IADM_ECHOCOLOR_TEXT, " monitoring ", IADM_ECHOCOLOR_ARG2, "everything")
         if toggle then
@@ -184,5 +192,5 @@ end)
 cmd.Name = "Monitor logs"
 cmd.Desc = "Monitors logs."
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
-cmd:AddArgument({type=IADM_ARGTYPE_STR, optional=true, hint="logtype"})
-cmd:AddArgument({type=IADM_ARGTYPE_BOOL, optional=true, hint="toggle"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="logtype, use \"list\" to view the log types"})
+cmd:AddArgument({type=IADM_ARGTYPE_BOOL, default=true, hint="toggle"})

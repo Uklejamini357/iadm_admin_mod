@@ -203,9 +203,10 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
             end
         end
     
-        msg(true, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..usedprefix..cmd..")" or "").."\n",
+        msg(true, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
-        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", usedprefix, cmd, s) or "", "\n")
+        IADM_ECHOCOLOR_ARG1, string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s),
+        IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if necessary." or "")
         if silent then return "" else return end
     elseif needed ~= 0 then
         msg(true, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!", "\n")
