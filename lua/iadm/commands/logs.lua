@@ -31,7 +31,8 @@ local cmd = IADM:AddCommand("viewlogs", function(caller, chat, logtype, page)
 
         if !v then break end
 
-        IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S", v.time), " ", IADM_ECHOCOLOR_LOGTYPE, v.action or "unknown", IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, v.text)
+		local blah = v.count and v.count > 1 and {" ", IADM_ECHOCOLOR_TEXT, "(x", IADM_ECHOCOLOR_ARG3, v.count, IADM_ECHOCOLOR_TEXT, ")"} or {}
+        IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S", v.time), " ", IADM_ECHOCOLOR_LOGTYPE, v.action or "unknown", IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, v.text, unpack(blah))
     end
 
 end)
@@ -52,18 +53,19 @@ local cmd = IADM:AddCommand("viewfulllogs", function(caller, logtype, page)
     local maxpage = math.ceil(maxcount/50)
     page = math.Clamp(page, 1, maxpage)
 
-    local count1 = math.max(1, 1+(page-1)*50)
+	local c = (page-1)*50
+    local count1 = math.max(1, 1+c)
     local count2 = math.min(maxcount, page*50)
 
     local logs
     if logtype == "all" then
         logs = sql.QueryTyped("SELECT * FROM iadm_logs ORDER BY id DESC LIMIT ?,50",
-            count1
+            count1-1
         )
     else
         logs = sql.QueryTyped("SELECT * FROM iadm_logs WHERE action=? ORDER BY id DESC LIMIT ?,50",
             logtype,
-            count1
+            count1-1
         )
     end
 
@@ -85,8 +87,13 @@ local cmd = IADM:AddCommand("viewfulllogs", function(caller, logtype, page)
         return
     end
     IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "Entries ", IADM_ECHOCOLOR_ARG1, count1, IADM_ECHOCOLOR_LOGTEXT, "-", IADM_ECHOCOLOR_ARG2, count2, IADM_ECHOCOLOR_LOGTEXT, ", out of ", IADM_ECHOCOLOR_ARG3, maxcount)
-    for i,v in ipairs(tbl) do
-        IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%Y-%m-%d %H:%M:%S", v.time), " ", IADM_ECHOCOLOR_LOGTYPE, v.action or "unknown", IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, v.str)
+	
+	local v
+    for i=count2-c,count1-c,-1 do
+		v = logs[i]
+		if !v then continue end
+		local blah = v.count and v.count > 1 and {" ", IADM_ECHOCOLOR_TEXT, "(x", IADM_ECHOCOLOR_ARG3, v.count, IADM_ECHOCOLOR_TEXT, ")"} or {}
+        IADM:Message(caller, false, IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%Y-%m-%d %H:%M:%S", v.time), " ", IADM_ECHOCOLOR_LOGTYPE, v.action or "unknown", IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, v.str, unpack(blah))
     end
 end)
 cmd.Name = "View logs"
@@ -127,7 +134,7 @@ cmd:AddArgument({type=IADM_ARGTYPE_STR, optional=true, hint="confirm", varargs=t
 local confirm
 local cmd = IADM:AddCommand("monitorlogs", function(caller, logtype, toggle)
     if caller == NULL or caller:IsListenServerHost() then
-        IADM:Message(caller, true, "You are already monitoring the server logs by default!")
+        IADM:Message(caller, true, "You are already monitoring all the server logs by default!")
         return
     end
     local tbl = IADM.MonitorLog[caller]

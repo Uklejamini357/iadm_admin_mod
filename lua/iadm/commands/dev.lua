@@ -20,8 +20,8 @@ local cmd = IADM:AddCommand("entinfo", function(caller, chat, ent)
 
     IADM:MessageWPrefix(caller, chat, col, "Entity info for ", Color(255,0,0), tostring(ent), col, "!")
     IADM:Message(caller, chat, col, "Health: ", Color(255,0,0), ent:Health(), col, "/", Color(255,0,0), ent:GetMaxHealth())
-	local wep = ent:GetActiveWeapon()
-	if wep:IsValid() then
+	local wep = ent.GetActiveWeapon and ent:GetActiveWeapon()
+	if wep and wep:IsValid() then
 		IADM:Message(caller, chat, col, "Weapon: ", Color(255,0,0), wep:GetClass(), col, "(", Color(255,160,0), wep:EntIndex(), col, ")")
 	end
 end)

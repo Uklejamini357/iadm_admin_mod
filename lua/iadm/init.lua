@@ -15,8 +15,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.4 beta4"
-IADM.UpdateVer = 17
+IADM.Version = "0.4 beta5"
+IADM.UpdateVer = 18
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -144,21 +144,56 @@ function IADM:GetPrefix()
     return istable(p) and p[1] or p
 end
 
+local function NormalizeTablePlrs(tbl)
+	for i,str in ipairs(tbl) do
+		if isnumber(str) or isbool(str) then continue end
+		if IsValid(str) then
+			tbl[i] = str:Nick()
+		end
+	end
+
+	return tbl
+end
+
+local function NormalizeTableTbls(tbl)
+	for i,str in ipairs(tbl) do
+		if istable(str) and !IsColor(str) then
+			tbl[i] = tostring(str)
+		end
+	end
+
+	return tbl
+end
+
 function IADM:Message(ply, tochat, ...)
     if SERVER then
-        if istable(ply) or ply:IsValid() then
+        if istable(ply) or IsValid(ply) then
+			local tbl = NormalizeTableTbls({...})
+
             net.Start("iadm_printmsg")
             net.WriteBit(0)
             net.WriteBit(tochat and 1 or 0)
-            net.WriteTable({...})
+            net.WriteTable(tbl)
             net.Send(ply)
+
+
+			local _,plys = player.Iterator() -- all players table
+			if game.IsDedicated() and istable(ply) and #plys == #ply then
+				MsgC(unpack(NormalizeTablePlrs({...})))
+				MsgN()
+			end
         else
-            MsgC(...)
+            MsgC(unpack(NormalizeTablePlrs({...})))
             MsgN()
         end
     elseif CLIENT then
         if tochat then
-            chat.AddText(...)
+			local tbl = {}
+			for i,str in pairs({...}) do
+				tbl[i] = !IsColor(str) and tostring(str) or str
+			end
+
+            chat.AddText(unpack(tbl))
         else
             MsgC(...)
             MsgN()
@@ -168,19 +203,32 @@ end
 
 function IADM:MessageWPrefix(ply, tochat, ...)
     if SERVER then
-        if istable(ply) or ply:IsValid() then
+        if istable(ply) or IsValid(ply) then
+			local tbl = NormalizeTableTbls({...})
+
             net.Start("iadm_printmsg")
             net.WriteBit(1)
             net.WriteBit(tochat and 1 or 0)
-            net.WriteTable({...})
+            net.WriteTable(tbl)
             net.Send(ply)
+
+			local _,plys = player.Iterator()
+			if game.IsDedicated() and istable(ply) and #plys == #ply then
+				MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, unpack(NormalizeTablePlrs({...})))
+				MsgN()
+			end
         else
-            MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
+            MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, unpack(NormalizeTablePlrs({...})))
             MsgN()
         end
     elseif CLIENT then
         if tochat then
-            chat.AddText(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
+			local tbl = {...}
+			for i,str in pairs(tbl) do
+				tbl[i] = !IsColor(str) and tostring(str) or str
+			end
+
+            chat.AddText(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, unpack(tbl))
         else
             MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, ...)
             MsgN()
@@ -250,6 +298,7 @@ end
 function IADM:CmdCanTarget(caller, target, ctbl, carg)
     if ctbl.IgnoreCanTarget then return true end
     if ctbl.CanAlwaysSelfTarget and caller == target then return true end
+	if caller == NULL then return true end -- console
 
     if ctbl.OverrideCanTarget then
         return ctbl.OverrideCanTarget(caller, target)
@@ -445,7 +494,7 @@ function IADM:ProcessStr(str, argtype)
 end
 
 function IADM:CanUseCommand(pl, cmd)
-    if !pl then return false end
+    if pl == NULL then return true end -- console
     if pl.IADM_GodMode then return true end
     -- if (pl == NULL or pl:IsListenServerHost()) then return true end
     local ctbl = IADM.Commands[cmd]
@@ -522,7 +571,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
         IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
-        IADM_ECHOCOLOR_ARG1, ctbl.Help and string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s) or "",
+        IADM_ECHOCOLOR_ARG1, string.format("\nUsage: %s%s %s\n", IADM:GetPrefix(), cmd, s),
         IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if it's necessary." or "")
         return
     elseif needed ~= 0 then

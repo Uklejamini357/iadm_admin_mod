@@ -1,14 +1,17 @@
 # Changelogs for IADM
 
 
+## v0.4 beta5 (#18)
++ IMPROVED THE LOGGING SYSTEM!
+
+! These fixes are especially related to running on dedicated server. Expect another commit to have more fixes related to this addon on dedicated server.
+! Also, too lazy to add proper changelogs here. Will edit it in next commit.
+
 ## v0.4 beta4 (#17)
 + Status command now also displays on which operating system the server runs on.
 + Added monitorlogs command, toggles monitoring for displaying any new logs into the console.
 
 / Changed viewfulllogs command functionality a little bit
-
-
-
 
 ## Fixes (#16)
 + Added IADM:ProcessArgs function

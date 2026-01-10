@@ -5,6 +5,7 @@ if !IADM_MODULE_SHOULDINCLUDE then return end
 if not IADM.RecentLogs then
     IADM.RecentLogs = {}
     IADM.RecentLogsByAction = {}
+    IADM.LogTick = {}
     IADM.LogFunc = {}
     IADM.LoggingEnabled = true
     IADM.MonitorLog = {}
@@ -21,65 +22,156 @@ function IADM:LogAction(action, ...)
     if !self.LogFunc[action] then return end
     if !IsLogEnabled(action) then return end
 
-    local strortbl = {self.LogFunc[action](...)}
-    if #strortbl == 1 then
-        strortbl = strortbl[1]
-    end
+    local strtbl = {self.LogFunc[action](...)}
 
     local str = ""
-    if istable(strortbl) then
-        for id,txt in pairs(strortbl) do
-            if !isstring(txt) then
-                local ply = txt -- might be player
-                if IsValid(ply) then
-                    local s
-                    if ply:IsPlayer() then
-                        s = string.format("%s (%s)", ply:Nick(), ply:GetIADMSteamID64())
-                    else
-                        s = string.format("%s [%d]", ply:GetClass(), ply:EntIndex())
-                    end
+	for id,txt in pairs(strtbl) do
+		if !isstring(txt) then
+			local ply = txt -- might be player
+			if IsValid(ply) then
+				local s
+				if ply:IsPlayer() then
+					if ply:IsBot() then
+						s = string.format("%s (%s)", ply:Nick(), ply:EntIndex())
+					else
+						s = string.format("%s (%s)", ply:Nick(), ply:GetIADMSteamID64())
+					end
+				else
+					s = string.format("%s [%d]", ply:GetClass(), ply:EntIndex())
+				end
 
-                    strortbl[id] = s
-                    str = str..s
-                end
-                continue
-            end
-            str = str..txt
-        end
+				strtbl[id] = s
+				str = str..s
+			end
+			continue
+		end
+		str = str..txt
+	end
 
-        local s = {IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, unpack(strortbl)}
-        MsgC(unpack(s))
-        MsgN()
-        table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = str})
-        table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str})
+	
+	local dontlog = IADM.LastLogAction == action and IADM.LastLogStr == str and IADM.LastLogTime and IADM.LastLogTime+5 > os.time()
+	local doprint = not dontlog
+	local thetbl
+	for i,tbl in ipairs(IADM.LogTick) do
+		if table.HasValue(tbl, str) then
+			thetbl = tbl
+			doprint = false
+			break
+		end
+	end
+	
+	if thetbl then
+		thetbl.count = thetbl.count + 1
+		if !thetbl.args then
+			thetbl.args = {IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, unpack(strtbl)}
+		end
+	else
+		local s = {IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, unpack(strtbl)}
+		MsgC(unpack(s))
+		MsgN()
+		if not dontlog then
+			table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = str, count = 1})
+			table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str, count = 1})
+		end
+	end
 
-        for ply,monitoringtbl in pairs(IADM.MonitorLog) do
-            if !IsValid(ply) then IADM.MonitorLog[ply] = nil continue end
-            if monitoringtbl == "all" or table.HasValue(monitoringtbl, action) then
-                IADM:Message(ply, false, unpack(s))
-            end
-        end
-    else
-        local s = {IADM_ECHOCOLOR_LOGTEXT, "[", IADM_ECHOCOLOR_TIMESTAMP, os.date("%H:%M:%S"), IADM_ECHOCOLOR_LOGTEXT, " LOG ", IADM_ECHOCOLOR_LOGTYPE, action, IADM_ECHOCOLOR_LOGTEXT, "] ", IADM_ECHOCOLOR_TEXT, strortbl}
-        MsgC(unpack(s))
-        MsgN()
-        table.insert(self.RecentLogs, {time = os.time(), svcurtime = SysTime(), action = action, text = strortbl})
-        table.insert(self.RecentLogsByAction[action], {time = os.time(), svcurtime = SysTime(), action = action, text = str})
 
-        for ply,monitoringtbl in pairs(IADM.MonitorLog) do
-            if !IsValid(ply) then IADM.MonitorLog[ply] = nil continue end
-            if monitoringtbl == "all" or table.HasValue(monitoringtbl, action) then
-                IADM:Message(ply, false, unpack(s))
-            end
+	local function printmonitorloggers()
+		for ply,monitoringtbl in pairs(IADM.MonitorLog) do
+			if !IsValid(ply) then IADM.MonitorLog[ply] = nil continue end
+			if monitoringtbl == "all" or table.HasValue(monitoringtbl, action) then
+				IADM:Message(ply, false, thetbl and unpack(thetbl.args) or unpack(strtbl))
+			end
+		end
+	end
+
+    local timerhandler = "IADM.LogTickTimer"
+    for i,tbl in ipairs(IADM.LogTick) do
+        timer.Create(timerhandler, 0, 1, function()
+            sql.QueryTyped("UPDATE iadm_logs SET count=? WHERE id=?",
+                tbl.count,
+                tbl.id
+            )
+			
+			local countid
+			if thetbl.args then
+				table.insert(thetbl.args, " ")
+				table.insert(thetbl.args, IADM_ECHOCOLOR_TEXT)
+				table.insert(thetbl.args, "(x")
+				table.insert(thetbl.args, IADM_ECHOCOLOR_ARG3)
+				table.insert(thetbl.args, thetbl.count)
+				countid = #thetbl.args
+				table.insert(thetbl.args, IADM_ECHOCOLOR_TEXT)
+				table.insert(thetbl.args, ")")
+			end
+
+			IADM.RecentLogs[tbl.recentlogid].count = thetbl.count
+			IADM.RecentLogs[tbl.recentlogidaction].count = thetbl.count
+			
+			printmonitorloggers()
+			
+			thetbl.args[countid] = (thetbl.count-1).."+"
+			MsgC(unpack(thetbl.args))
+			MsgN()
+
+            table.Empty(IADM.LogTick)
+            timer.Remove(timerhandler)
+        end)
+
+        if table.HasValue(tbl, str) then
+            return
         end
     end
 
-    sql.QueryTyped("INSERT INTO iadm_logs(action, str, time) "..
-        "VALUES (?, ?, ?)",
-        action,
-        str,
-        os.time()
-    )
+
+    local t = {
+        action = action,
+        str = str,
+        time = os.time(),
+        count = 1,
+		recentlogid = #IADM.RecentLogs,
+		recentlogidaction = #IADM.RecentLogsByAction[action]
+    }
+    table.insert(IADM.LogTick, t)
+
+
+	if dontlog then
+		IADM.LastLogCount = IADM.LastLogCount + 1
+		
+		IADM.RecentLogs[IADM.LastLogRecentId].count = IADM.RecentLogs[IADM.LastLogRecentId].count + 1
+		IADM.RecentLogsByAction[action][IADM.LastLogRecentIdAction].count = IADM.RecentLogsByAction[action][IADM.LastLogRecentIdAction].count + 1
+		sql.QueryTyped("UPDATE iadm_logs SET count=? WHERE str=?",
+			IADM.LastLogCount,
+			str
+		)
+	else
+		sql.QueryTyped("INSERT INTO iadm_logs(action, str, time, count) "..
+			"VALUES (?, ?, ?, ?)",
+			action,
+			str,
+			os.time(),
+			1
+		)
+		IADM.LastLogTime = os.time()
+		IADM.LastLogCount = 1
+		IADM.LastLogRecentId = #IADM.RecentLogs
+		IADM.LastLogRecentIdAction = #IADM.RecentLogsByAction[action]
+	end
+	
+	IADM.LastLogAction = action
+	IADM.LastLogStr = str
+
+    local id = sql.QueryTyped("SELECT id FROM iadm_logs ORDER BY id DESC LIMIT 1")
+    if id and id[1] then
+        t.id = id[1].id
+    end
+
+    timer.Create(timerhandler, 0, 1, function()
+		printmonitorloggers()
+
+        table.Empty(IADM.LogTick)
+        timer.Remove(timerhandler)
+    end)
 end
 
 function IADM:RegisterLogAction(action, callback, name, desc, default)
@@ -98,7 +190,8 @@ IADM:AddSQLDatabase("logs", function(id)
         "id INTEGER PRIMARY KEY AUTOINCREMENT, ".. -- idk why tf AUTO_INCREMENT doesn't work here
         "action CHAR(63), "..
         "str VARCHAR(1024), "..
-        "time INT UNSIGNED"..
+        "time INT UNSIGNED, "..
+        "count INT UNSIGNED"..
     ")")
 end)
 
@@ -245,7 +338,7 @@ end, "Player connect", "desc", true)
 gameevent.Listen("player_connect")
 IADM:AddHook("player_connect", "LogPlayerConnect", function(data)
     if !IsLogEnabled("plrconnect") then return end
-    if data.bot then return end
+    if tobool(data.bot) then return end
     IADM:LogAction("plrconnect", data.name, util.SteamIDTo64(data.networkid))
 end)
 

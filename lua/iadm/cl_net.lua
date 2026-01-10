@@ -3,6 +3,12 @@ net.Receive("iadm_printmsg", function(len)
     local printtochat = net.ReadBit() == 1
     local tbl = net.ReadTable()
 
+	for i,str in ipairs(tbl) do
+		if !isbool(str) and !isnumber(str) and
+		(IsColor(str) or IsValid(str)) then continue end
+		tbl[i] = tostring(str)
+	end
+
     if printtochat then
         if prefix then
             chat.AddText(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white, unpack(tbl))
@@ -10,6 +16,12 @@ net.Receive("iadm_printmsg", function(len)
             chat.AddText(unpack(tbl))
         end
     else
+		for i,str in ipairs(tbl) do
+			if IsValid(str) then
+				tbl[i] = str:Nick()
+			end
+		end
+
         if prefix then
             MsgC(IADM_ECHOCOLOR_PREFIX, "[IADM] ", color_white)
         end

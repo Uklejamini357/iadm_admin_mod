@@ -8,7 +8,7 @@ end
 
 function IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, createdby)
     if IsValid(createdby) then createdby = createdby:GetIADMSteamID64()
-    elseif type(createdby) ~= "string" then return false, "Invalid caller!" end
+    elseif type(createdby) ~= "string" then createdby = "0" end
 
     if IADM.UserGroups[name] then return false, "This group already exists!" end
 
@@ -111,16 +111,18 @@ function IADM:AddUserToGroup(ply, group, caller)
         return false, "You cannot set yourself to a lower level group as you might lose important permissions!"
     end
 
+	local id64 = IADM:GetSteamID64(ply)
+
     local db = IADM.DatabaseDir.."_users"
     if IsValid(ply) then
         ply:SetUserGroup(group)
     else
-        local dbply = sql.QueryTyped("SELECT * FROM "..db.." WHERE ID=?", id64)[1]
+        local dbply = sql.QueryTyped("SELECT * FROM "..db.." WHERE id64=?", id64)[1]
         if !dbply then return false, "This player does not exist!" end
     end
 
     sql.QueryTyped("UPDATE "..db.." "..
-        "SET groupname=? WHERE id=?",
+        "SET groupname=? WHERE id64=?",
         group,
         id64
     )

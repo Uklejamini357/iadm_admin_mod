@@ -1,11 +1,11 @@
-local allplys = player.GetAll
+-- local allplys = player.GetAll
 
 local cmd = IADM:AddCommand("kill", function(caller, targets)
     for _,ply in ipairs(targets) do
         if !ply:Alive() then continue end
 
         ply:Kill()
-        IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, "!")
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, "!")
     end
 end)
 cmd.Name = "Kill"
@@ -42,7 +42,7 @@ local cmd = IADM:AddCommand("explode", function(caller, targets, level)
                 explo:Input("explode")
             end
 
-            IADM:MessageWPrefix(allplys(), true, ply, IADM_ECHOCOLOR_TEXT, " got blasted in a violent explosion!")
+            IADM:MessageWPrefix(caller, true, ply, IADM_ECHOCOLOR_TEXT, " got blasted in a violent explosion!")
         end
     end
 end)
@@ -56,7 +56,7 @@ local cmd = IADM:AddCommand("skill", function(caller, targets)
     for _,ply in ipairs(targets) do
         if ply:Alive() then
             ply:KillSilent()
-            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, " silently!")
+            IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, " silently!")
         end
     end
 end)
@@ -70,7 +70,7 @@ local cmd = IADM:AddCommand("strip", function(caller, targets)
     for _,ply in ipairs(targets) do
         if ply:Alive() then
             ply:StripWeapons()
-            IADM:MessageWPrefix(allplys(), true, IADM_ECHOCOLOR_TEXT, "Stripped ", ply, IADM_ECHOCOLOR_TEXT, "'s current weapons!")
+            IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Stripped ", ply, IADM_ECHOCOLOR_TEXT, "'s current weapons!")
         end
     end
 end)

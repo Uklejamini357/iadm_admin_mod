@@ -6,15 +6,15 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
     local tbl = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=?", id64)[1]
     if tbl then
         if tbl.groupname and IADM.UserGroups[tbl.groupname] then
-            ply:SetUserGroup(tbl.groupname)
+			ply.IADM_usergroup = tbl.groupname
         end
 
         ply.IADM_firsttime = tbl.firsttime
         ply.IADM_playtime = tbl.playtime
         ply.IADM_lastseen = os.time()
-        
-        ply.IADM_spawntime = SysTime() -- using SysTime cuz there's no other way to Calculate CurTime() without timescale 
 
+        ply.IADM_spawntime = SysTime() -- using SysTime cuz there's no other way to Calculate CurTime() without timescale 
+		
         if !isbot then
             sql.QueryTyped("UPDATE "..IADM.DatabaseDir.."_users "..
                 "SET name=?, lastseen=? WHERE id64=?",
@@ -38,6 +38,11 @@ IADM:AddHook("PlayerInitialSpawn", "PlayerInit", function(ply)
         ply.IADM_InitPhase = 1
     end
 end, PRE_HOOK)
+
+IADM:AddHook("PlayerInitialSpawn", "PlayerPostInit", function(_, ply)
+	ply:SetUserGroup(ply.IADM_usergroup)
+	ply.IADM_usergroup = nil
+end, POST_HOOK)
 
 local function PlayerSave(ply)
     local id64 = ply:GetIADMSteamID64()
@@ -254,15 +259,22 @@ end, POST_HOOK_RETURN)
 
 
 local pass="I want to confirm deletion of the IADM database. "
-for i=1,10 do
-    pass=pass..string.char(math.random(33,126))
-end
+pcall(function() -- pcall in case i fuck it up
+	for i=1,10 do
+		pass=pass..string.char(math.random(33,126))
+	end
+	string.Replace(pass, ";", ":")
+end)
 
 concommand.Add("iadm_god_mode", function(pl, cmd, _, str)
-    if !pl:IsValid() or !pl:IsListenServerHost() then
-        pl:SendLua(string.format([[MsgN("Unknown command: %s")]], cmd))
+    if pl:IsValid() and !pl:IsListenServerHost() then
+        pl:SendLua(string.format([[MsgC(color_white, "Unknown command: %s\n")]], cmd))
         return
     end
+	if !IsValid(pl) then
+		IADM:MessageWPrefix(NULL, false, IADM_ECHOCOLOR_ERROR, "Server Console has always godmode enabled!")
+		return
+	end
 
     if !pl.IADM_GodMode then
         pl.IADM_GodMode = true
@@ -280,7 +292,10 @@ end)
 
 
 concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
-    if pl:IsValid() and !pl:IsListenServerHost() then return end
+    if pl:IsValid() and !pl:IsListenServerHost() then
+        pl:SendLua(string.format([[MsgC(color_white, "Unknown command: %s\n")]], cmd))
+        return
+    end
 
     local p = pass
     if str ~= pass and str == "" then
@@ -306,6 +321,11 @@ concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
         end
         IADM.Hooks[event] = nil
     end
+
+	local _,plys = player.Iterator()
+	IADM:Message(plys, true, Color(190,0,0), "I am sorry for what I have to do.")
+	IADM:Message(plys, true, Color(190,0,0), "But I can't keep this data forever.")
+	IADM:Message(plys, true, Color(190,0,0), "Goodbye.")
 
     RunConsoleCommand("changelevel", game.GetMap())
 end)

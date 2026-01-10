@@ -105,13 +105,13 @@ end, HOOK_MONITOR_HIGH)
 local loadingsteamid64 = {}
 gameevent.Listen("player_connect")
 IADM:AddHook("player_connect", "OnPlayerConnectSteamID64", function(data)
-    if data.bot then return end
+    if tobool(data.bot) then return end -- why this shit don't use true/false bool
     loadingsteamid64[util.SteamIDTo64(data.networkid)] = SysTime()
 end)
 
 gameevent.Listen("player_disconnect")
 IADM:AddHook("player_disconnect", "OnPlayerDisconnectSteamID64", function(data)
-    if data.bot then return end
+    if tobool(data.bot) then return end
     loadingsteamid64[util.SteamIDTo64(data.networkid)] = nil
 end)
 
