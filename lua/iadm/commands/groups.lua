@@ -3,6 +3,7 @@ local cmd = IADM:AddCommand("groupadd", function(caller, chat, name, powerlevel,
 
     if success then
         IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Created ", IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " usergroup with ", IADM_ECHOCOLOR_ARG2, "powerlevel ", IADM_ECHOCOLOR_ARG1, powerlevel, IADM_ECHOCOLOR_TEXT, "!")
+		IADM:LogCommandUse(caller, "#A added new usergroup #S with powerlevel #N!", false, name, powerlevel)
     else
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ERROR, "Failed to make a new usergroup! (", IADM_ECHOCOLOR_ERROR_REASON, reason, IADM_ECHOCOLOR_ERROR, ")")
     end
@@ -23,6 +24,7 @@ local cmd = IADM:AddCommand("groupdel", function(caller, chat, name)
 
     if success then
         IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Removed ", IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " usergroup!")
+		IADM:LogCommandUse(caller, "#A removed usergroup #S!", false, name)
     else
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ERROR, "Failed to delete an usergroup! (", IADM_ECHOCOLOR_ERROR_REASON, reason, IADM_ECHOCOLOR_ERROR, ")")
     end
@@ -39,6 +41,7 @@ local cmd = IADM:AddCommand("groupmodify", function(caller, chat, name, key, val
 
     if success then
         IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Modified ", IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " usergroup!")
+		IADM:LogCommandUse(caller, "#A has modified usergroup #S!", {silent=true}, name)
     else
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ERROR, "Failed to modify an usergroup! (", IADM_ECHOCOLOR_ERROR_REASON, reason, IADM_ECHOCOLOR_ERROR, ")")
     end
@@ -58,6 +61,7 @@ local cmd = IADM:AddCommand("setgroup", function(caller, chat, target, group)
 
     if success then
         IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Set ", IADM_ECHOCOLOR_ARG1, target, IADM_ECHOCOLOR_TEXT, "'s usergroup to ", IADM_ECHOCOLOR_ARG2, group, IADM_ECHOCOLOR_TEXT,  "!")
+		IADM:LogCommandUse(caller, "#A has set usergroup for #T to #S!", false, group, target)
     else
         IADM:Message(caller, chat, IADM_ECHOCOLOR_ERROR, "Failed to set user's group! (", IADM_ECHOCOLOR_ERROR_REASON, reason, IADM_ECHOCOLOR_ERROR, ")")
     end
@@ -70,17 +74,16 @@ cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_PLR})
 cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="usergroupname"})
 
-local cmd = IADM:AddCommand("groupslist", function(caller, chat, target, group)
-    IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Groups list:")
+local cmd = IADM:AddCommand("groupslist", function(caller, target, group)
+    IADM:Message(caller, true, IADM_ECHOCOLOR_TEXT, "Groups list:")
     for name,group in SortedPairsByMemberValue(IADM.UserGroups, "powerlevel", true) do
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG1, "->\t", name)
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Powerlevel: ", group.powerlevel)
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is admin: ", tobool(group.isadmin))
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is superadmin: ", tobool(group.issuperadmin))
+        IADM:Message(caller, false, IADM_ECHOCOLOR_ARG1, "->\t", name)
+        IADM:Message(caller, false, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Powerlevel: ", group.powerlevel)
+        IADM:Message(caller, false, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is admin: ", tobool(group.isadmin))
+        IADM:Message(caller, false, IADM_ECHOCOLOR_ARG2, "\t-->\t", "Is superadmin: ", tobool(group.issuperadmin))
     end
 end)
-cmd.Name = "Set user group"
-cmd.Desc = "Gives a new rank to selected target(s)."
+cmd.Name = "List Groups"
+cmd.Desc = "Lists the groups."
 cmd.Dangerous = true
-cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN

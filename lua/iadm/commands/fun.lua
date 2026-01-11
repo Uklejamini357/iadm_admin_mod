@@ -5,8 +5,9 @@ local cmd = IADM:AddCommand("kill", function(caller, targets)
         if !ply:Alive() then continue end
 
         ply:Kill()
-        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, "!")
     end
+	
+	IADM:LogCommandUse(caller, "#A killed #T", false, targets)
 end)
 cmd.Name = "Kill"
 cmd.Desc = "Kills the player."
@@ -41,10 +42,10 @@ local cmd = IADM:AddCommand("explode", function(caller, targets, level)
                 explo:Activate()
                 explo:Input("explode")
             end
-
-            IADM:MessageWPrefix(caller, true, ply, IADM_ECHOCOLOR_TEXT, " got blasted in a violent explosion!")
         end
     end
+	
+	IADM:LogCommandUse(caller, "#A exploded #T with explosion level #N", false, targets, level)
 end)
 cmd.Name = "Explode"
 cmd.Desc = "Explodes the player violently."
@@ -59,6 +60,8 @@ local cmd = IADM:AddCommand("skill", function(caller, targets)
             IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Killed ", ply, IADM_ECHOCOLOR_TEXT, " silently!")
         end
     end
+
+	IADM:LogCommandUse(caller, "#A silently killed #T", false, targets)
 end)
 cmd.Name = "Silent Kill"
 cmd.Desc = "Silently kills the player."
@@ -70,9 +73,10 @@ local cmd = IADM:AddCommand("strip", function(caller, targets)
     for _,ply in ipairs(targets) do
         if ply:Alive() then
             ply:StripWeapons()
-            IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Stripped ", ply, IADM_ECHOCOLOR_TEXT, "'s current weapons!")
         end
     end
+	
+	IADM:LogCommandUse(caller, "#A stripped #T", false, targets)
 end)
 cmd.Name = "Strip"
 cmd.Desc = "Strips weapons away from the target."
@@ -92,6 +96,8 @@ local cmd = IADM:AddCommand("hp", function(caller, targets, hp, mhp)
             ply:SetMaxHealth(mhp)
         end
     end
+
+	IADM:LogCommandUse(caller, "#A set health for #T to ", false, targets, hp, mhp)
 end)
 cmd.Name = "HP"
 cmd.Desc = "Sets the target a specified amount of health."
@@ -104,6 +110,7 @@ local cmd = IADM:AddCommand("ignite", function(caller, targets, dur)
     for _,ply in ipairs(targets) do
         ply:Ignite(dur)
     end
+	IADM:LogCommandUse(caller, "#A ignited #T (#N seconds)", false, targets, dur)
 end)
 cmd.Name = "Ignite"
 cmd.Desc = "Ignite a player for a specified amount of seconds."
@@ -111,16 +118,17 @@ cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
 cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})
 
-local cmd = IADM:AddCommand("unignite", function(caller, targets, dur)
+local cmd = IADM:AddCommand("unignite", function(caller, targets)
     for _,ply in ipairs(targets) do
         ply:Extinguish()
     end
+
+	IADM:LogCommandUse(caller, "#A extinguished #T", false, targets)
 end)
 cmd.Name = "Unignite"
 cmd.Desc = "Extinguish specified entities."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
-cmd:AddArgument({type=IADM_ARGTYPE_NUM, default=300})
 
 
 IADM.InfAmmoPlayers = IADM.InfAmmoPlayers or {}
@@ -129,7 +137,6 @@ local cmd = IADM:AddCommand("infammo", function(caller, target, mode)
 
     local handler = "IADM.InfAmmo."..tostring(target)
     if mode > 0 then
-        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_TEXT, "Enabled infammo for ", target, IADM_ECHOCOLOR_TEXT, "!")
         infammos[target] = mode
 
         hook.Add("Think", handler, function()
@@ -164,9 +171,12 @@ local cmd = IADM:AddCommand("infammo", function(caller, target, mode)
                 end
             end
         end)
-    else
+		
+		IADM:LogCommandUse(caller, "#A gave infammo for #T", false, target)
+    elseif infammos[target] then
         infammos[target] = nil
         hook.Remove("Think", handler)
+		IADM:LogCommandUse(caller, "#A revoked infammo for #T", false, target)
     end
 end)
 cmd.Name = "Infammo"

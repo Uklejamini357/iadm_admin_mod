@@ -8,6 +8,7 @@ include("iadm/init.lua")
 AddCSLuaFile("iadm/sh_meta.lua")
 include("iadm/sh_meta.lua")
 if SERVER then
+    include("iadm/sv_init.lua")
     include("iadm/sv_hooks.lua")
     include("iadm/sv_net.lua")
 end

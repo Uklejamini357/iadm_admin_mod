@@ -3,6 +3,7 @@ local cmd = IADM:AddCommand("kick", function(caller, target, reason)
 	
 	local nick = IsValid(caller) and caller:Nick() or "Console"
     target:Kick(Format("Kicked %s.\nReason: \n%s", IsValid(caller) and Format("by %s (%s)", nick, caller:SteamID64()) or "from the Server", reason))
+	IADM:LogCommandUse(caller, "#A kicked #T (#S)", false, target, reason)
     IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " was ", Color(255,0,0), "kicked", IADM_ECHOCOLOR_TEXT, "! (", Color(255,128,0), reason, IADM_ECHOCOLOR_TEXT, ")")
 end)
 cmd.Name = "Kick"

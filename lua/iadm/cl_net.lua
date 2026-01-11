@@ -35,9 +35,11 @@ net.Receive("iadm_playerusecmd", function(len)
     local str = net.ReadString()
     local tbl = net.ReadTable()
 
-    str = string.Replace(str, "#A", ply:Nick())
+    str = string.Replace(str, "#A#", ply:Nick())
+    -- str = string.Replace(str, "#T#", ply:Nick())
+    -- str = string.Replace(str, "#B#", ply:Nick())
 
-    -- chat.AddText()
+    IADM:MessageWPrefix(LocalPlayer(), true, str)
 end)
 
 net.Receive("iadm_csay", function()

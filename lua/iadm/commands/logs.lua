@@ -120,6 +120,7 @@ local cmd = IADM:AddCommand("deletelogs", function(caller, confirmtext)
         table.Empty(IADM.RecentLogsByAction[logtype])
     end
     sql.QueryTyped("DELETE FROM iadm_logs")
+	IADM:LogCommandUse(caller, "#A has deleted the whole logs!", {silent=true})
     local completetime = SysTime()-time
 
     IADM:Message(caller, true, Color(255,0,0), string.format("Deleted all %d entries. Deleted %d recent entries. Took %s", entries, recententries, completetime > 1 and math.Round(completetime, 2).."s" or math.Round(completetime*1000).."ms"))
