@@ -150,9 +150,13 @@ local cmd = IADM:AddCommand("monitorlogs", function(caller, logtype, toggle)
 			IADM:Message(caller, false, IADM_ECHOCOLOR_ARG2, "\t-> ", IADM_ECHOCOLOR_ARG1, id)
 		end
 		return
-	end
-
-    if logtype == "all" then
+	elseif logtype == "current" then
+		IADM:Message(caller, true, IADM_ECHOCOLOR_TEXT, "List of currently monitoring: ", IADM_ECHOCOLOR_ARG1, "(Shows in console)")
+		for id,_ in SortedPairs(IADM.LogFunc) do
+			IADM:Message(caller, false, IADM_ECHOCOLOR_ARG2, "\t-> ", IADM_ECHOCOLOR_ARG1, id)
+		end
+		return
+	elseif logtype == "all" then
         IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ARG1, toggle and "Now" or "No longer", IADM_ECHOCOLOR_TEXT, " monitoring ", IADM_ECHOCOLOR_ARG2, "everything")
         if toggle then
             tbl = "all"
@@ -190,7 +194,7 @@ local cmd = IADM:AddCommand("monitorlogs", function(caller, logtype, toggle)
     IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ARG1, toggle and "Now" or "No longer", IADM_ECHOCOLOR_TEXT, " monitoring ", IADM_ECHOCOLOR_ARG2, logtype)
 end)
 cmd.Name = "Monitor logs"
-cmd.Desc = "Monitors logs."
+cmd.Desc = "Monitors logs. Use \"list\" for the list, use \"current\" for currently monitored logs. Use \"all\" to monitor everything."
 cmd.PowerLevelReq = IADM_GROUP_POWER_SUPERADMIN
-cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="logtype, use \"list\" to view the log types"})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="logtype"})
 cmd:AddArgument({type=IADM_ARGTYPE_BOOL, default=true, hint="toggle"})

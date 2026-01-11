@@ -1,6 +1,7 @@
 local MODULE_NAME = "Groups"
+local MODULE = IADM.Modules[MODULE_NAME] or {}
 
-if !IADM_MODULE_SHOULDINCLUDE then return end
+if !IADM_MODULE_SHOULDINCLUDE and !MODULE.Included then return MODULE end
 
 local function OnFuncSuccess()
     IADM:SyncUserGroupsToClients()

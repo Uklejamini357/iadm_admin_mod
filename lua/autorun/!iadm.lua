@@ -27,6 +27,7 @@ for _,name in ipairs(files) do
     local MODULE = include("iadm/modules/"..name)
     if MODULE then
         MODULE.ID = string.sub(name, 1, -5)
+        MODULE.Included = tobool(IADM_MODULE_SHOULDINCLUDE)
     end
     if SERVER and file.Exists("iadm/modules/sv_"..name, "LUA") then
         include("iadm/modules/sv_"..name)

@@ -1,11 +1,11 @@
 local MODULE_NAME = "Bans"
-local MODULE = {}
+local MODULE = IADM.Modules[MODULE_NAME] or {}
 IADM.Modules[MODULE_NAME] = MODULE
 
 MODULE.Name = MODULE_NAME
 MODULE.Description = "Module for managing user bans"
 
-if !IADM_MODULE_SHOULDINCLUDE then return MODULE end
+if !IADM_MODULE_SHOULDINCLUDE and !MODULE.Included then return MODULE end
 
 if !SERVER then return MODULE end
 

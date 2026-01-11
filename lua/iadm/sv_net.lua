@@ -125,6 +125,10 @@ net.Receive("iadm_playerinit", function(len, pl)
         loadingsteamid64[pl:SteamID64()] = nil
     end
     if pl.IADM_InitPhase and pl.IADM_InitPhase == phasetoload then
+		if IADM.InitSyncData[phasetoload] and isfunction(IADM.InitSyncData[phasetoload].Func) then
+			IADM.InitSyncData[phasetoload].Func(IADM, pl)
+		end
+
         net.Start("iadm_playerinit")
         net.WriteUInt(phasetoload, 8)
         net.Send(pl)
