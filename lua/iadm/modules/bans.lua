@@ -22,6 +22,14 @@ IADM:AddSQLDatabase("bans", function(id)
     ")")
 end)
 
+IADM:AddLoadSQL("bans", function(id)
+    for count,user in ipairs(sql.QueryTyped("SELECT * FROM "..(IADM.DatabaseDir.."_"..id))) do
+        local id64 = user.id64
+        user.id64 = nil
+        IADM.BannedPlayers[id64] = user
+    end
+end)
+
 
 function IADM:CanBeBanned(id64)
     local ply = player.GetBySteamID64(id64)
@@ -44,15 +52,28 @@ function IADM:AddBan(id64, reason, duration, bannedby)
     local isbot = IsValid(ply) and ply:IsBot()
 
     local start = os.time()
-    local endban = duration == 0 and 0 or (start + duration)
+    local banend = duration == 0 and 0 or (start + duration)
 
     local dbname = IADM.DatabaseDir.."_bans"
-    local sqlname = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", bannedby)
-    local banname = IsValid(player.GetBySteamID64(bannedby)) and player.GetBySteamID64(bannedby):Name() or sqlname and sqlname[1].name or "Console"
+    local bannedusername = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", id64)
+	if bannedusername then
+		bannedusername = bannedusername[1].name
+	end
+    local banname = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", bannedby)
+	if banname then
+		banname = banname[1].name
+	else
+		if IsValid(player.GetBySteamID64(bannedby)) then
+			banname = player.GetBySteamID64(bannedby):Name()
+		else
+			banname = "Console"
+		end 
+	end
     local bannedbyid = IsValid(bannedby) and bannedby:SteamID64() or bannedby == NULL and "0" or bannedby
     local tbl = {
+        name = banname,
         banstart = start,
-        banend = endban,
+        banend = banend,
         duration = duration,
         reason = reason,
         bannedby = bannedbyid,
@@ -61,15 +82,28 @@ function IADM:AddBan(id64, reason, duration, bannedby)
     IADM.BannedPlayers[id64] = tbl
 
     if !ply:IsValid() or !isbot then
-        sql.QueryTyped("INSERT INTO "..dbname.." (id64, banstart, banend, duration, reason, bannedby, bannedbyname) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        sql.QueryTyped("INSERT INTO "..dbname.." (id64, name, banstart, banend, duration, reason, bannedby, bannedbyname) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             id64,
-            start,
-            endban,
-            duration,
-            reason,
-            bannedby,
-            banname
+			tbl.name,
+            tbl.banstart,
+            tbl.banend,
+            tbl.duration,
+            tbl.reason,
+            tbl.bannedby,
+            tbl.bannedbyname
         )
+		
+		print(id64, type(id64))
+		print(tbl.name, type(tbl.name))
+		print(tbl.banstart, type(tbl.banstart))
+		print(tbl.banend, type(tbl.banend))
+		print(tbl.duration, type(tbl.duration))
+		print(tbl.reason, type(tbl.reason))
+		print(tbl.bannedby, type(tbl.bannedby))
+		print(tbl.bannedbyname, type(tbl.bannedbyname))
+		
+		game.ConsoleCommand(string.format("banid %d %s \"%s\"\n", math.ceil(duration/60), util.SteamIDFrom64(id64), reason))
+		RunConsoleCommand("writeid")
     end
 
     if IsValid(ply) then
@@ -83,6 +117,28 @@ function IADM:AddBan(id64, reason, duration, bannedby)
     return true
 end
 
+function IADM:RemoveBan(id64, reason, bannedby)
+    if IsValid(bannedby) then bannedby = bannedby:GetIADMSteamID64()
+    elseif type(bannedby) ~= "string" and bannedby ~= NULL then return false, "Invalid user banning the target!" end
+
+    if !IADM:IsPlayerBanned(id64) then return false, "This player is not banned, or doesn't exist!" end
+    local banned = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", id64)
+	if banned then
+		banned = banned[1]
+	end
+
+    local dbname = IADM.DatabaseDir.."_bans"
+    local bannedbyid = IsValid(bannedby) and bannedby:SteamID64() or bannedby == NULL and "0"
+
+	sql.QueryTyped("DELETE FROM "..dbname.." WHERE id64=?", id64)
+	IADM.BannedPlayers[id64] = nil
+
+	game.ConsoleCommand(string.format("removeid %s\n", util.SteamIDFrom64(id64)))
+	RunConsoleCommand("writeid")
+
+    return true
+end
+
 function IADM:GetBanReason(id64, bypass)
     if !bypass and not IADM:IsPlayerBanned(id64) then return "null" end
     local bantbl = IADM.BannedPlayers[id64]
@@ -92,8 +148,60 @@ Reason: %reason%
 Banned by: %bannedbyname% (%bannedbyid%)
 Unbanned in: %time%]]
 
+	local timeleft = bantbl.banend - os.time()
+	local s = ""
+	if bantbl.banend ~= 0 then
+		if timeleft >= 31536000 then
+			if s ~= "" then
+				s = s..", "
+			end
+
+			local yrs = math.floor(timeleft/31536000)
+			s = s..yrs.." years"
+			timeleft = timeleft - yrs*31536000
+		end
+
+		if timeleft >= 86400 then
+			if s ~= "" then
+				s = s..", "
+			end
+
+			local days = math.floor(timeleft/86400)
+			s = s..days.." days"
+			timeleft = timeleft - days*86400
+		end
+
+		if timeleft >= 3600 then
+			if s ~= "" then
+				s = s..", "
+			end
+
+			local hours = math.floor(timeleft/3600)
+			s = s..hours.." hours"
+			timeleft = timeleft - hours*3600
+		end
+
+		if timeleft >= 60 then
+			if s ~= "" then
+				s = s..", "
+			end
+
+			local mins = math.floor(timeleft/60)
+			s = s..mins.." minutes"
+			timeleft = timeleft - mins*60
+		end
+
+		if timeleft > 0 then
+			if s ~= "" then
+				s = s..", "
+			end
+
+			s = s..timeleft.." seconds"
+		end
+	end
+	
     r = string.Replace(r, "%reason%", bantbl.reason)
-    r = string.Replace(r, "%time%", bantbl.banend == 0 and "Never" or string.NiceTime(bantbl.banend - os.time()))
+    r = string.Replace(r, "%time%", bantbl.banend == 0 and "Never" or s)
     r = string.Replace(r, "%bannedbyname%", bantbl.bannedbyname)
     r = string.Replace(r, "%bannedbyid%", bantbl.bannedby)
 
@@ -104,16 +212,36 @@ end
 function IADM:IsPlayerBanned(id64)
     local bantbl = IADM.BannedPlayers[id64]
     local time = os.time()
-    if !bantbl then return end
+    if !bantbl then return false end
 
     return bantbl and (bantbl.banend == 0 or bantbl.banend > time)
 end
 
 
-IADM:AddHook("CheckPassword", "checkBanned", function(steamID64, ipAddress, svPassword, clPassword, name)
-    if IADM.BannedPlayers[steamID64] then
-        return false, "You are banned!"
+IADM:AddHook("CheckPassword", "checkBanned", function(id64, ipAddress, svPassword, clPassword, name)
+	local tbl = IADM.BannedPlayers[id64]
+    if IADM:IsPlayerBanned(id64) then
+		MsgC(IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " (", IADM_ECHOCOLOR_ARG2, id64, IADM_ECHOCOLOR_TEXT, ", ", IADM_ECHOCOLOR_ARG3, ipAddress, IADM_ECHOCOLOR_TEXT, ") ", "attempted to join, they are still banned!")
+		if tbl.banend == 0 then
+			MsgC(IADM_ECHOCOLOR_ERROR, " (permanently)")
+		end
+		MsgN()
+		
+        return false, IADM:GetBanReason(id64, true)
+	elseif tbl then
+		IADM:MessageWPrefix(NULL, nil, IADM_ECHOCOLOR_TEXT, "Removing ban for ", IADM_ECHOCOLOR_ARG1, id64)
+		IADM:RemoveBan(id64, "Ban expired.", NULL)
+		return false, "#GameUI_ConnectionFailed"
     end
+end)
+
+timer.Create("CheckBans", 1, 0, function()
+	for id64,tbl in pairs(IADM.BannedPlayers) do
+		if tbl.banend ~= 0 and tbl.banend <= os.time() then
+			IADM:MessageWPrefix(NULL, nil, IADM_ECHOCOLOR_TEXT, "Removing ban for ", IADM_ECHOCOLOR_ARG1, id64)
+			IADM:RemoveBan(id64, "Ban expired", NULL)
+		end
+	end
 end)
 
 return MODULE

@@ -330,3 +330,35 @@ concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
 
     RunConsoleCommand("changelevel", game.GetMap())
 end)
+
+local RealTime = RealTime
+local lastrt = RealTime()
+local times = 0
+IADM:AddHook("Think", "LagDetection", function()
+    if (RealTime()-lastrt) >= 0.5 then
+		times = times + 1
+		if times > 3 then -- more than 3 times
+			IADM:Message(player.GetAll(), true, "SERVER IS LAGGING, STOP IT")
+			for _,ent in ents.Iterator() do
+				local phys = ent.GetPhysicsObject and ent:GetPhysicsObject()
+				if phys and phys:IsValid() then
+					phys:EnableMotion(false)
+					phys:Sleep()
+				end
+			end
+		elseif times > 1 then
+			IADM:Message(player.GetAll(), true, "SERVER IS LAGGING, WTF YOU DOING!!!!!!")
+			for _,ent in ents.Iterator() do
+				local phys = ent.GetPhysicsObject and ent:GetPhysicsObject()
+				if phys and phys:IsValid() then
+					phys:Sleep()
+				end
+			end
+		end
+		
+		timer.Create("LagDetector", 5, 1, function()
+			times = 0
+		end)
+    end
+    lastrt = RealTime()
+end)
