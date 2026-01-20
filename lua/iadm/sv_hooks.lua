@@ -331,6 +331,7 @@ concommand.Add("iadm_reset_database", function(pl, cmd, _, str)
     RunConsoleCommand("changelevel", game.GetMap())
 end)
 
+--[[
 local RealTime = RealTime
 local lastrt = RealTime()
 local times = 0
@@ -362,3 +363,4 @@ IADM:AddHook("Think", "LagDetection", function()
     end
     lastrt = RealTime()
 end)
+]]

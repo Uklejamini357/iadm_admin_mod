@@ -383,17 +383,25 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             else
                 local tbl = {}
                 if carg.type == IADM_ARGTYPE_ENTS then
-                    for _,ent in ipairs(ents.FindByClass(a)) do
-                        if ent:IsPlayer() then continue end
-                        table.insert(tbl, ent)
+                    if string.sub(a, 1, 1) == "#" then
+                        for _,ent in ipairs(ents.FindByName(string.sub(a, 2))) do
+                            if ent:IsPlayer() then continue end
+                            table.insert(tbl, ent)
+                        end
+                    else
+                        for _,ent in ipairs(ents.FindByClass(a)) do
+                            if ent:IsPlayer() then continue end
+                            table.insert(tbl, ent)
+                        end
+                    end
+                else
+                    for _,ply in ipairs(player.GetAll()) do
+                        if string.find(string_lower(ply:Nick()), string_lower(v)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
+                            table.insert(tbl, ply)
+                        end
                     end
                 end
-                
-                for _,ply in ipairs(player.GetAll()) do
-                    if string.find(string_lower(ply:Nick()), string_lower(v)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
-                        table.insert(tbl, ply)
-                    end
-                end
+
                 a = tbl
             end
 
