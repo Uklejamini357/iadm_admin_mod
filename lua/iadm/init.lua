@@ -15,8 +15,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.4 beta6"
-IADM.UpdateVer = 23
+IADM.Version = "0.4 beta7"
+IADM.UpdateVer = 25
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -321,7 +321,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if args[count] == "" then
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "String cannot be empty!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "String cannot be empty!")
                 return
             end
 
@@ -353,7 +353,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                         local nick = tbl[i]:Nick()
                         s=s..(i == 1 and nick or ", "..nick)
                     end
-                    IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ",
+                    IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ",
                     Color(255,128,0), Format("Too many players (%d) to select from! ", #tbl), Color(255,255,0), "Select from:\n",
                     Color(255,128,0), s)
                     return
@@ -363,12 +363,12 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if isstring(a) or !IsValid(a) or !a:IsPlayer() then
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Player not found!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Player not found!")
                 return
             end
 
             if !IADM:CmdCanTarget(pl, a, ctbl, carg) then
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", IADM_ECHOCOLOR_ERROR_ARGVAR, a:Nick(), IADM_ECHOCOLOR_ERROR, " cannot be targetted!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_ARGVAR, a:Nick(), IADM_ECHOCOLOR_ERROR, " cannot be targetted!")
                 return
             end
 
@@ -406,7 +406,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if isstring(a) or !istable(a) and !IsValid(a) then
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Could not find an entity!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Could not find an entity!")
                 return
             end
 
@@ -422,7 +422,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                     a = math.min(carg.max, a)
                 end
             else
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "Invalid number!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Invalid number!")
                 return
             end
             args[count] = a
@@ -443,7 +443,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             args[count] = a
         elseif carg.type == IADM_ARGTYPE_STR then
             if a == "" then
-                IADM:Message(pl, inchat, Color(255,0,0), "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, Color(255,0,0), " error: ", Color(255,128,0), "String cannot be empty!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "String cannot be empty!")
                 return
             end
         end
@@ -465,7 +465,7 @@ function IADM:ProcessCfgArgs(pl, ctbl, str)
                 str = math.min(ctbl.max, str)
             end
         else
-            IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "Invalid number!")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", Color(255,128,0), "Invalid number!")
             return
         end
     elseif ctbl.ConfigType == IADM_ARGTYPE_BOOL then
@@ -474,12 +474,12 @@ function IADM:ProcessCfgArgs(pl, ctbl, str)
         elseif str=="false" or str=="0" then
             str = false
         else
-            IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "Invalid value! Use true/false or 1/0!")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", Color(255,128,0), "Invalid value! Use true/false or 1/0!")
             return
         end
     elseif ctbl.ConfigType == IADM_ARGTYPE_STR then
         if str == "" then
-            IADM:Message(pl, false, Color(255,0,0), "Error: ", Color(255,128,0), "String cannot be empty!")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", Color(255,128,0), "String cannot be empty!")
             return
         end
     end
@@ -533,7 +533,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
             end
         end
 
-        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "No command selected. Currently available commands: ", IADM_ECHOCOLOR_ARG1, c)
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, IADM:GetTranslatedText(pl, "No command selected. Currently available commands: "), IADM_ECHOCOLOR_ARG1, c)
         return
     end
 
@@ -551,11 +551,11 @@ concommand.Add("iadm", function(pl, cmd, args, str)
         for k,_ in SortedPairs(IADM.Commands) do
             if string.sub(k, 1, #cmd) ~= cmd then continue end
             if !IADM:CanUseCommand(pl) then continue end
-            IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ". Maybe you meant: ", IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, "?")
+            IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, IADM:GetTranslatedText(pl, "Invalid command "), IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, IADM:GetTranslatedText(pl, ". Maybe you meant: "), IADM_ECHOCOLOR_ARG1, k, IADM_ECHOCOLOR_TEXT, IADM:GetTranslatedText(pl, "?"))
             return
         end
 
-        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Invalid command ", IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, ".")
+        IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, IADM:GetTranslatedText(pl, "Invalid command "), IADM_ECHOCOLOR_ARG1, cmd, IADM_ECHOCOLOR_TEXT, IADM:GetTranslatedText(pl, "."))
         return
     end
 
@@ -569,18 +569,25 @@ concommand.Add("iadm", function(pl, cmd, args, str)
 
     if #ctbl.Args ~= 0 and #ctbl.Args-defaultargsamt == needed and needed ~= 0 then
         local s = ""
+
+        local argtypes = {
+            [IADM_ARGTYPE_PLR] = "player",
+            [IADM_ARGTYPE_PLRS] = "players",
+            [IADM_ARGTYPE_ENT] = "entity",
+            [IADM_ARGTYPE_ENTS] = "entities",
+            [IADM_ARGTYPE_TIME] = "time",
+            [IADM_ARGTYPE_STR] = "text",
+            [IADM_ARGTYPE_NUM] = "number",
+        }
+
         for count,arg in ipairs(ctbl.Args) do
-            if arg.type == IADM_ARGTYPE_STR then
-                s = s..((arg.optional and string.format("[%s]", arg.hint or "text") or string.format("<%s>", arg.hint or "text")))
-            elseif arg.type == IADM_ARGTYPE_NUM then
-                s = s..((arg.optional and string.format("[%s]", arg.hint or "number") or string.format("<%s>", arg.hint or "text")))
-            end
+            s = s..(s=="" and "" or " ")..string.format(arg.optional and "[%s]" or "<%s>", IADM:GetTranslatedText(pl, arg.hint or argtypes[arg.type]))
         end
 
         IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
-        IADM_ECHOCOLOR_ARG1, string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s),
-        IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\nDangerous command. Only allow this command to members you trust and if it's necessary." or "")
+        IADM_ECHOCOLOR_ARG1, "\n", string.format(IADM:GetTranslatedText(pl, "Usage: %s%s %s"), IADM:GetPrefix(), cmd, s),
+        IADM_ECHOCOLOR_WARN, ctbl.Dangerous and "\n"..IADM:GetTranslatedText(pl, "Dangerous command. Only allow this command to members you trust and if it's necessary.") or "")
         return
     elseif needed ~= 0 then
         IADM:MessageWPrefix(pl, false, IADM_ECHOCOLOR_TEXT, "Not enough arguments provided!")
@@ -588,8 +595,17 @@ concommand.Add("iadm", function(pl, cmd, args, str)
     end
 
     for count,arg in ipairs(ctbl.Args) do
-        if arg and arg.default and not args[count] then
+        if arg.default and not args[count] then
             args[count] = arg.default
+        end
+
+        if arg.choices and not table.HasValue(arg.choices, args[count]) then
+            if arg.optional then
+                args[count] = nil
+            else
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Invalid choice! You used ", IADM_ECHOCOLOR_ERROR_REASON, args[count])
+                return
+            end
         end
     end
 

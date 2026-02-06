@@ -31,7 +31,7 @@ local function Evaluate(pl, caller, format, ...)
 
 				_f = string.Replace(_f, "#T", targets_str)
 			else
-				_f = string.Replace(_f, "#T", arg[1]:Nick())
+				_f = string.Replace(_f, "#T", pl == caller and "Yourself" or caller == arg[1] and "Themselves" or arg[1]:Nick())
 			end
 		elseif IsValid(arg) then
 			_f = string.Replace(_f, "#T", arg:Nick())
@@ -51,7 +51,7 @@ function IADM:LogCommandUse(caller, format, args, ...)
 		if args and args.silent then continue end
 
 		nick = IsValid(caller) and caller:Nick() or "(Console)"
-		_f = string.Replace(format, "#A", nick)
+		_f = string.Replace(format, "#A", pl == caller and "You" or nick)
         IADM:MessageWPrefix(pl, true, add_args, Evaluate(pl, caller, _f, ...))
     end
 	

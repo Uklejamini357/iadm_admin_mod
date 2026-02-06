@@ -97,14 +97,14 @@ local cmd = IADM:AddCommand("hp", function(caller, targets, hp, mhp)
         end
     end
 
-	IADM:LogCommandUse(caller, "#A set health for #T to ", false, targets, hp, mhp)
+	IADM:LogCommandUse(caller, "#A set health for #T to #N", false, targets, hp, mhp)
 end)
 cmd.Name = "HP"
 cmd.Desc = "Sets the target a specified amount of health."
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS})
-cmd:AddArgument({type=IADM_ARGTYPE_NUM, optional=true})
-cmd:AddArgument({type=IADM_ARGTYPE_NUM, optional=true})
+cmd:AddArgument({type=IADM_ARGTYPE_NUM, hint="hp"})
+cmd:AddArgument({type=IADM_ARGTYPE_NUM, hint="maxhp", optional=true})
 
 local cmd = IADM:AddCommand("ignite", function(caller, targets, dur)
     for _,ply in ipairs(targets) do

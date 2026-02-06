@@ -195,14 +195,21 @@ IADM:AddHook("PlayerSay", "PlayerSay", function(pl, text)
 
     if #ctbl.Args ~= 0 and #ctbl.Args-defaultargsamt == needed and needed ~= 0 then
         local s = ""
-        for count,arg in pairs(ctbl.Args) do
-            if arg.type == IADM_ARGTYPE_STR then
-                s = s..((arg.optional and string.format("[%s]", arg.hint or "text") or string.format("<%s>", arg.hint or "text")))
-            elseif arg.type == IADM_ARGTYPE_NUM then
-                s = s..((arg.optional and string.format("[%s]", arg.hint or "number") or string.format("<%s>", arg.hint or "text")))
-            end
+
+        local argtypes = {
+            [IADM_ARGTYPE_PLR] = "player",
+            [IADM_ARGTYPE_PLRS] = "players",
+            [IADM_ARGTYPE_ENT] = "entity",
+            [IADM_ARGTYPE_ENTS] = "entities",
+            [IADM_ARGTYPE_TIME] = "time",
+            [IADM_ARGTYPE_STR] = "text",
+            [IADM_ARGTYPE_NUM] = "number",
+        }
+
+        for count,arg in ipairs(ctbl.Args) do
+            s = s..(s=="" and "" or " ")..string.format(arg.optional and "[%s]" or "<%s>", IADM:GetTranslatedText(pl, arg.hint or argtypes[arg.type]))
         end
-    
+
         msg(true, IADM_ECHOCOLOR_TEXT, "# "..(ctbl.Name or cmd)..(ctbl.Name and " ("..cmd..")" or "").."\n",
         IADM_ECHOCOLOR_ARG1, ctbl.Desc or "",
         IADM_ECHOCOLOR_ARG1, string.format("\nUsage: %s%s %s", IADM:GetPrefix(), cmd, s),

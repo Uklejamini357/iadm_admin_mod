@@ -4,6 +4,14 @@ include("iadm/globals.lua")
 AddCSLuaFile("iadm/init.lua")
 include("iadm/init.lua")
 
+AddCSLuaFile("iadm/translate.lua")
+include("iadm/translate.lua")
+
+local files = file.Find("iadm/languages/*.lua", "LUA", "sortasc")
+for _,name in ipairs(files) do
+    AddCSLuaFile("iadm/languages/"..name)
+    include("iadm/languages/"..name)
+end
 
 AddCSLuaFile("iadm/sh_meta.lua")
 include("iadm/sh_meta.lua")
@@ -20,7 +28,8 @@ if CLIENT then
     include("iadm/cl_net.lua")
 end
 
-local files = file.Find("iadm/modules/*.lua", "LUA", "sortasc")
+
+files = file.Find("iadm/modules/*.lua", "LUA", "sortasc")
 for _,name in ipairs(files) do
     if string.StartsWith(name, "sv_") then continue end
     IADM_MODULE_SHOULDINCLUDE = true

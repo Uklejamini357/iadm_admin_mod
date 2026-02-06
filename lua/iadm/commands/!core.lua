@@ -2,15 +2,6 @@ local IADM = IADM
 local allplys = player.GetAll
 
 local cmd = IADM:AddCommand("help", function(caller, chat, cmd)
-    if not isstring(cmd) then
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "---- ", IADM_ECHOCOLOR_ARG2, "Incomprehensibly Advanced Distributed Management Mod", IADM_ECHOCOLOR_TEXT, " ----")
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "This server uses ", IADM_ECHOCOLOR_PREFIX, "IADM", IADM_ECHOCOLOR_TEXT, " Admin Mod (v", IADM_ECHOCOLOR_ARG1, tostring(IADM.Version), IADM_ECHOCOLOR_TEXT, ") by ", IADM_ECHOCOLOR_ARG2, IADM.Author)
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "An admin mod independent from ULX made from scratch.")
-        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Thank you for using the IADM addon!")
-
-        return
-    end
-
     local c = IADM.Commands[cmd]
     if !c then
         for k,_ in SortedPairs(IADM.Commands) do
@@ -37,7 +28,7 @@ cmd.Name = "Help"
 cmd.Desc = "Understand the function of the command better."
 cmd.Help = "iadm help [command]"
 cmd.ChatArg = true
-cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="command", optional=true})
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="command"})
 
 
 local gm = engine.ActiveGamemode()
@@ -73,4 +64,22 @@ end)
 cmd.Name = "Status"
 cmd.Desc = "Check the server status."
 cmd.ChatArg = true
+
+local IADM = IADM
+local allplys = player.GetAll
+
+local cmd = IADM:AddCommand("version", function(caller, chat, choice)
+    if !choice or choice == "version" then
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "---- ", IADM_ECHOCOLOR_ARG2, "Incomprehensibly Advanced Distributed Management Mod", IADM_ECHOCOLOR_TEXT, " ----")
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "This server uses ", IADM_ECHOCOLOR_PREFIX, "IADM", IADM_ECHOCOLOR_TEXT, " Admin Mod (v", IADM_ECHOCOLOR_ARG1, tostring(IADM.Version), IADM_ECHOCOLOR_TEXT, ") by ", IADM_ECHOCOLOR_ARG2, IADM.Author)
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "An admin mod independent from ULX made from scratch.")
+        IADM:Message(caller, chat, IADM_ECHOCOLOR_TEXT, "Thank you for using the IADM addon!")
+    end
+end)
+cmd.Name = "Version"
+cmd.Desc = ""
+cmd.ChatArg = true
+cmd:AddArgument({type=IADM_ARGTYPE_STR, hint="command", optional = true, choices = {
+    "version"
+}})
 

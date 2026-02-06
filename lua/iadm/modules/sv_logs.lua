@@ -250,7 +250,7 @@ IADM:AddHook("PlayerSpawnedEffect", "LogSpawnEffect", function(pl, model, ent)
 end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnnpc", function(pl, ent)
-    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned NPC ", IADM_ECHOCOLOR_ARG2, string.format("%s [%d]", ent:GetClass(), ent:EntIndex())
+    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned NPC ", IADM_ECHOCOLOR_ARG2, ent:GetClass()
 end, "Player spawn NPC", "desc", true)
 
 IADM:AddHook("PlayerSpawnedNPC", "LogSpawnNPC", function(pl, ent)
@@ -277,7 +277,7 @@ IADM:AddHook("PlayerSpawnedRagdoll", "LogSpawnRagdoll", function(pl, model, ent)
 end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnsent", function(pl, ent)
-    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned SENT ", IADM_ECHOCOLOR_ARG2, string.format("%s [%d]", ent:GetClass(), ent:EntIndex())
+    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned SENT ", IADM_ECHOCOLOR_ARG2, ent:GetClass()
 end, "Player spawn SENT", "desc", true)
 
 IADM:AddHook("PlayerSpawnedSENT", "LogSpawnSENT", function(pl, ent)
@@ -286,7 +286,7 @@ IADM:AddHook("PlayerSpawnedSENT", "LogSpawnSENT", function(pl, ent)
 end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnswep", function(pl, ent)
-    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned SWEP ", IADM_ECHOCOLOR_ARG2, string.format("%s [%d]", ent:GetClass(), ent:EntIndex())
+    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned SWEP ", IADM_ECHOCOLOR_ARG2, ent:GetClass()
 end, "Player spawn SWEP", "desc", true)
 
 IADM:AddHook("PlayerSpawnedSWEP", "LogSpawnSWEP", function(pl, ent)
@@ -305,13 +305,13 @@ IADM:AddHook("PlayerGiveSWEP", "LogGiveSWEP", function(tbl, pl, weapon)
     IADM:LogAction("plrgiveswep", pl, weapon)
 end, POST_HOOK)
 
-IADM:RegisterLogAction("plrspawnvehicle", function(pl, model)
-    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned vehicle ", IADM_ECHOCOLOR_ARG2, string.format("%s [%d]"), IADM_ECHOCOLOR_TEXT, " with model ", IADM_ECHOCOLOR_ARG3, ent:GetModel()
+IADM:RegisterLogAction("plrspawnvehicle", function(pl, ent, model)
+    return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned vehicle ", IADM_ECHOCOLOR_ARG2, ent, IADM_ECHOCOLOR_TEXT, " with model ", IADM_ECHOCOLOR_ARG3, model
 end, "Player spawn vehicle", "desc", true)
 
 IADM:AddHook("PlayerSpawnedVehicle", "LogSpawnVehicle", function(pl, ent)
     if !IsLogEnabled("plrspawnvehicle") then return end
-    IADM:LogAction("plrspawnvehicle", pl, ent)
+    IADM:LogAction("plrspawnvehicle", pl, ent, ent:GetModel())
 end, HOOK_MONITOR_HIGH)
 
 
