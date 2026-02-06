@@ -31,7 +31,8 @@ local function Evaluate(pl, caller, format, ...)
 
 				_f = string.Replace(_f, "#T", targets_str)
 			else
-				_f = string.Replace(_f, "#T", pl == caller and "Yourself" or caller == arg[1] and "Themselves" or arg[1]:Nick())
+				local s = arg[1]
+				_f = string.Replace(_f, "#T", caller == s and (pl == caller and "Yourself" or "Themselves") or s:IsPlayer() and s:Nick() or s:GetClass())
 			end
 		elseif IsValid(arg) then
 			_f = string.Replace(_f, "#T", arg:Nick())

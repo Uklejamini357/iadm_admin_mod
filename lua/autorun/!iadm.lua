@@ -1,3 +1,9 @@
+if not (PRE_HOOK and PRE_HOOK_RETURN and HOOK_MONITOR_LOW and HOOK_LOW and HOOK_NORMAL and HOOK_HIGH and HOOK_MONITOR_HIGH and POST_HOOK_RETURN and POST_HOOK) then
+    ErrorNoHaltWithStack("Srlion's hook library is not installed, IADM will not start!")
+    return
+end
+
+
 AddCSLuaFile("iadm/globals.lua")
 include("iadm/globals.lua")
 
