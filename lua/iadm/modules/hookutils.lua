@@ -1,12 +1,11 @@
 local MODULE_NAME = "Hook Utils"
-local MODULE = {}
+local MODULE = IADM.Modules[MODULE_NAME] or {}
 IADM.Modules[MODULE_NAME] = MODULE
 
 MODULE.Name = MODULE_NAME
 MODULE.Required = true
 
-if !IADM_MODULE_SHOULDINCLUDE then return MODULE end
-AddCSLuaFile()
+if !IADM_MODULE_SHOULDINCLUDE and !MODULE.Included then return MODULE end
 
 IADM:AddHook("PhysgunPickup", "PlayerPickup", function(pl, ent)
     if pl:IsAdmin() and ent:IsPlayer() then

@@ -1,6 +1,7 @@
 local MODULE_NAME = "Groups"
+local MODULE = IADM.Modules[MODULE_NAME] or {}
 
-if !IADM_MODULE_SHOULDINCLUDE then return end
+if !IADM_MODULE_SHOULDINCLUDE and !MODULE.Included then return MODULE end
 
 local function OnFuncSuccess()
     IADM:SyncUserGroupsToClients()
@@ -8,7 +9,9 @@ end
 
 function IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, createdby)
     if IsValid(createdby) then createdby = createdby:GetIADMSteamID64()
-    elseif type(createdby) ~= "string" then return false, "Invalid caller!" end
+    elseif type(createdby) ~= "string" then createdby = "0" end
+
+    if IADM.UserGroups[name] then return false, "This group already exists!" end
 
     local ostime = os.time()
     local tbl = {
@@ -16,21 +19,20 @@ function IADM:AddGroup(name, powerlevel, isadmin, issuperadmin, createdby)
         createdby = createdby,
         isadmin = isadmin,
         issuperadmin = issuperadmin,
-        lastmodified = ostime,
         lastmodifiedby = createdby,
         timecreated = ostime,
         timemodified = ostime,
     }
     IADM.UserGroups[name] = tbl
 
-    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) VALUES(?, ?, ?, ?, ?, ?, ?)",
+    sql.QueryTyped("INSERT INTO "..(IADM.DatabaseDir.."_groups").."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, timecreated, timemodified) "..
+    "VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
         name,
         powerlevel,
         isadmin,
         issuperadmin,
         createdby,
         tbl.lastmodifiedby,
-        tbl.lastmodified,
         tbl.timecreated,
         tbl.timemodified
     )
@@ -45,6 +47,8 @@ function IADM:RemoveGroup(name, caller)
     elseif type(caller) ~= "string" then return false, "Invalid caller!" end
 
     if !IADM.UserGroups[name] then return false, "This group doesn't exist!" end
+    if name == "user" then return false, "Deleting this group would result in catastrophic damage!" end
+
     IADM.UserGroups[name] = nil
     for _,ply in ipairs(player.GetAll()) do
         if !ply:IsUserGroup(name) then continue end
@@ -54,7 +58,7 @@ function IADM:RemoveGroup(name, caller)
     local db = IADM.DatabaseDir.."_groups"
     sql.QueryTyped("DELETE FROM "..db.." WHERE name=?", name)
 
-    local db = IADM.DatabaseDir.."_players"
+    local db = IADM.DatabaseDir.."_users"
     sql.QueryTyped("UPDATE "..db.." SET groupname='user' WHERE groupname=?", name)
 
     OnFuncSuccess()
@@ -101,21 +105,25 @@ function IADM:ModifyGroup(name, key, value, caller)
     return false, "Invalid keyvalue to set for the group! Available keys: powerlevel, isadmin, issuperadmin"
 end
 
-function IADM:AddUserToGroup(id64, group, caller)
-    local ply
+function IADM:AddUserToGroup(ply, group, caller)
     if !IADM.UserGroups[group] then return false, "This group doesn't exist!" end
 
-    local ply = player.GetBySteamID64(id64)
+    if ply == caller and IADM.UserGroups[group].powerlevel < ply:GetGroupPowerLevel() and !ply.IADM_GodMode then
+        return false, "You cannot set yourself to a lower level group as you might lose important permissions!"
+    end
+
+	local id64 = IADM:GetSteamID64(ply)
+
     local db = IADM.DatabaseDir.."_users"
     if IsValid(ply) then
         ply:SetUserGroup(group)
     else
-        local dbply = sql.QueryTyped("SELECT * FROM "..db.." WHERE ID=?", id64)[1]
+        local dbply = sql.QueryTyped("SELECT * FROM "..db.." WHERE id64=?", id64)[1]
         if !dbply then return false, "This player does not exist!" end
     end
 
     sql.QueryTyped("UPDATE "..db.." "..
-        "SET groupname=? WHERE id=?",
+        "SET groupname=? WHERE id64=?",
         group,
         id64
     )
@@ -132,7 +140,6 @@ IADM:AddSQLDatabase("groups", function(id)
         "issuperadmin BOOLEAN, "..
         "createdby BIGINT, "..
         "lastmodifiedby BIGINT, "..
-        "lastmodified INT UNSIGNED, "..
         "timecreated INT UNSIGNED, "..
         "timemodified INT UNSIGNED"..
     ")")
@@ -148,15 +155,14 @@ IADM:AddSQLDatabase("groups", function(id)
 
         if !shouldcreate then continue end
 
-        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, createdby, lastmodifiedby, lastmodified, timecreated, timemodified) "..
-            "VALUES(?, ?, ?, ?, ?, ?, ?)",
+        sql.QueryTyped("INSERT INTO "..db.."(name, powerlevel, isadmin, issuperadmin, createdby, lastmodifiedby, timecreated, timemodified) "..
+            "VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
             id,
             tbl.powerlevel,
             tbl.isadmin,
             tbl.issuperadmin,
             tbl.createdby or "0",
             tbl.lastmodifiedby or "0",
-            tbl.lastmodified or ostime,
             tbl.timecreated or ostime,
             tbl.timemodified or ostime
         )

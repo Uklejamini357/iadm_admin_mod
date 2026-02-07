@@ -2,7 +2,7 @@ local col = Color(176, 237, 92)
 
 local cmd = IADM:AddCommand("lua", function(caller, chat, code)
     RunString(code)
-    IADM:MessageWPrefix(caller, true, col, "Ran lua ", Color(255,0,0), code, col, "!")
+    IADM:LogCommandUse(caller, "#A ran lua #S", false, code)
 end)
 cmd.Name = "Lua"
 cmd.Desc = "Runs a lua code. (Alias of lua_run)"
@@ -20,8 +20,8 @@ local cmd = IADM:AddCommand("entinfo", function(caller, chat, ent)
 
     IADM:MessageWPrefix(caller, chat, col, "Entity info for ", Color(255,0,0), tostring(ent), col, "!")
     IADM:Message(caller, chat, col, "Health: ", Color(255,0,0), ent:Health(), col, "/", Color(255,0,0), ent:GetMaxHealth())
-	local wep = ent:GetActiveWeapon()
-	if wep:IsValid() then
+	local wep = ent.GetActiveWeapon and ent:GetActiveWeapon()
+	if wep and wep:IsValid() then
 		IADM:Message(caller, chat, col, "Weapon: ", Color(255,0,0), wep:GetClass(), col, "(", Color(255,160,0), wep:EntIndex(), col, ")")
 	end
 end)
@@ -31,3 +31,12 @@ cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS, default="@"})
 
+/*
+local cmd = IADM:AddCommand("test", function(caller, test)
+    IADM:Message(caller, true, IADM_ECHOCOLOR_TEXT, "Returned value: ", IADM_ECHOCOLOR_ARG1, test)
+end)
+cmd.Name = "Test command"
+cmd.Desc = "time"
+cmd.PowerLevelReq = IADM_GROUP_POWER_GODMODE
+cmd:AddArgument({type=IADM_ARGTYPE_TIME})
+*/

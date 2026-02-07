@@ -48,43 +48,46 @@ To target yourself, you can always use ^<br>
 To target a player under your crosshair, use @ (works on entities as well!)
 
 ### Why did you decide to make a new admin mod?
-ULX felt too outdated, despite it being , lacked any versatile customization options. SAM, while being a simple mod, is a paid mod. Other alternatives like xAdmin lacked extensibility and FAdmin being DarkRP focused only. IADM on the other hand, will remain highly customizable and extensible with the help of toggleable modules, addons, etc.
+ULX felt too outdated, despite it being powerful, lacked any versatile customization options. SAM, while being a simple mod, is a paid mod. Other alternatives like xAdmin lacked extensibility and FAdmin being DarkRP focused only. IADM on the other hand, will remain highly customizable and extensible with the help of toggleable modules, addons, etc.
 
 ### There is no UI for the mod yet. When will UI update be coming?
 I have no plans for making UI yet. For now, stick to using console commands and chat commands.
 
 ### Why did you choose Srlion's Hook Library as a dependency?
-It's super fast and versatile. Claims to be faster than ULib, too.
+It's super fast and versatile. Oh, and it's faster than ULib, too.
 
 ### Will this addon be paid?
 Absolutely not. I have no intentions, nor any plans to make IADM a paid mod, as it will stick to being open source only.
+
+
+# Troubleshooting!
+
+### I accidentally made myself non-admin and can't get myself back to superadmin!
+If you're on a local listen server, you can simply use "iadm_god_mode" commmand to disable permission checks for you, allowing to use any command on any group. Otherwise, on a dedicated server, use the server console instead. Technically, this shouldn't happen as this addon prevents you from setting yourself to a group with lower powerlevel to prevent yourself from losing access to important commands and functionality.
 
 
 # Roadmap for IADM:
 > Note: This roadmap may not be 100% accurate.
 
 
-v0.3: (DONE)
-- Add SQL database
-- Add UserGroups management
-- Override ply:IsAdmin() and ply:IsSuperAdmin() functions
-- Make lower ranked players unable to target commands on higher ranked players
-- Add OverrideCanTarget and CanTarget extensive functionality
-- Add data sync
-- Implement more commands
+v0.4: (DONE)
+- Add logging system (Pretty much done)
+- Make addon more configurable with the config table (DONE)
+- More commands (viewlogs, viewfulllogs, deletelogs, monitorlogs)
 
-v0.4: (CURRENT)
-- Add logging system (WIP)
-- Make addon more configurable with the config table
-- More commands
-
-v0.5:
-- Add leveling module
+v0.5: (NEXT)
+- Add ChatFilter module
 - Make non-required modules toggleable
-- More commands
+- Expand and Improve moderation actions
+- Add more configurables
+- More commands (mute, chatmute, vcmute, togglemodule)
 
 v0.6:
 - Add Whitelist module
+- Add SandboxUtils module
+- Improve logging system
 
 v0.7:
 - Add votes module
+- Add MOTD module
+- Improve echoes
