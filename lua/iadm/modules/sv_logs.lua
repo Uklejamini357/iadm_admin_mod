@@ -252,7 +252,7 @@ end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnnpc", function(pl, ent)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned NPC ", IADM_ECHOCOLOR_ARG2, ent:GetClass()
-end, "Player spawn NPC", "desc", true)
+end, "Player spawn NPC", "Logs player spawning NPC's", true)
 
 IADM:AddHook("PlayerSpawnedNPC", "LogSpawnNPC", function(pl, ent)
     if !IsLogEnabled("plrspawnnpc") then return end
@@ -261,7 +261,7 @@ end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnprop", function(pl, model)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned prop ", IADM_ECHOCOLOR_ARG2, model
-end, "Player spawn prop", "desc", true)
+end, "Player spawn prop", "Logs player spawning props", true)
 
 IADM:AddHook("PlayerSpawnedProp", "LogSpawnProp", function(pl, model, ent)
     if !IsLogEnabled("plrspawnprop") then return end
@@ -270,7 +270,7 @@ end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnragdoll", function(pl, model)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned prop ragdoll ", IADM_ECHOCOLOR_ARG2, model
-end, "Player spawn ragdoll", "desc", true)
+end, "Player spawn ragdoll", "Logs player spawning ragdolls", true)
 
 IADM:AddHook("PlayerSpawnedRagdoll", "LogSpawnRagdoll", function(pl, model, ent)
     if !IsLogEnabled("plrspawnragdoll") then return end
@@ -279,7 +279,7 @@ end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnsent", function(pl, ent)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned SENT ", IADM_ECHOCOLOR_ARG2, ent:GetClass()
-end, "Player spawn SENT", "desc", true)
+end, "Player spawn SENT", "Logs player spawning SENTs", true)
 
 IADM:AddHook("PlayerSpawnedSENT", "LogSpawnSENT", function(pl, ent)
     if !IsLogEnabled("plrspawnsent") then return end
@@ -288,7 +288,7 @@ end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrspawnswep", function(pl, ent)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned SWEP ", IADM_ECHOCOLOR_ARG2, ent:GetClass()
-end, "Player spawn SWEP", "desc", true)
+end, "Player spawn SWEP", "Logs player spawning weapons", true)
 
 IADM:AddHook("PlayerSpawnedSWEP", "LogSpawnSWEP", function(pl, ent)
     if !IsLogEnabled("plrspawnswep") then return end
@@ -297,7 +297,7 @@ end, HOOK_MONITOR_HIGH)
 
 IADM:RegisterLogAction("plrgiveswep", function(pl, weapon)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " gave ", IADM_ECHOCOLOR_ARG2, weapon, IADM_ECHOCOLOR_TEXT, " to themselves"
-end, "Player give SWEP", "desc", true)
+end, "Player give SWEP", "Logs player giving weapons", true)
 
 IADM:AddHook("PlayerGiveSWEP", "LogGiveSWEP", function(tbl, pl, weapon)
     if !IsLogEnabled("plrgiveswep") then return end
@@ -308,7 +308,7 @@ end, POST_HOOK)
 
 IADM:RegisterLogAction("plrspawnvehicle", function(pl, ent, model)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " spawned vehicle ", IADM_ECHOCOLOR_ARG2, ent, IADM_ECHOCOLOR_TEXT, " with model ", IADM_ECHOCOLOR_ARG3, model
-end, "Player spawn vehicle", "desc", true)
+end, "Player spawn vehicle", "Logs player spawning vehicles", true)
 
 IADM:AddHook("PlayerSpawnedVehicle", "LogSpawnVehicle", function(pl, ent)
     if !IsLogEnabled("plrspawnvehicle") then return end
@@ -336,7 +336,7 @@ end, POST_HOOK)
 
 IADM:RegisterLogAction("plrconnect", function(name, steamid64)
     return IADM_ECHOCOLOR_ARG1, string.format("%s (%s)", name, steamid64), IADM_ECHOCOLOR_TEXT, " has connected"
-end, "Player connect", "desc", true)
+end, "Player connect", "Logs player connecting to the server", true)
 
 gameevent.Listen("player_connect")
 IADM:AddHook("player_connect", "LogPlayerConnect", function(data)
@@ -347,7 +347,7 @@ end)
 
 IADM:RegisterLogAction("botspawn", function(name)
     return IADM_ECHOCOLOR_ARG1, name, IADM_ECHOCOLOR_TEXT, " has spawned"
-end, "Bot spawn", "desc", false)
+end, "Bot spawn", "Logs player bots being created", false)
 
 IADM:AddHook("PlayerInitialSpawn", "LogBotSpawn", function(pl)
     if !IsLogEnabled("botspawn") then return end
@@ -357,7 +357,7 @@ end, PRE_HOOK)
 
 IADM:RegisterLogAction("plrinitspawn", function(pl)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " has spawned"
-end, "Player first session spawns", "desc", true)
+end, "Player first session spawns", "Logs players spawing in for the first time in their session", true)
 
 IADM:AddHook("PlayerInitialSpawn", "LogPlayerInitSpawn", function(pl)
     if !IsLogEnabled("plrinitspawn") then return end
@@ -367,7 +367,7 @@ end, PRE_HOOK)
 
 IADM:RegisterLogAction("plrloadingend", function(pl, time)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " has finished loading! (took ", IADM_ECHOCOLOR_ARG2, time.." seconds", IADM_ECHOCOLOR_TEXT, ")"
-end, "Player ready", "desc", true)
+end, "Player ready", "Logs players finishing loading", true)
 
 IADM:AddHook("IADMPlrInit", "LogPlayerFullyLoaded", function(pl, time)
     if !IsLogEnabled("plrloadingend") then return end
@@ -376,11 +376,11 @@ end)
 
 IADM:RegisterLogAction("plrdisconnect", function(name, steamid64, reason)
     return IADM_ECHOCOLOR_ARG1, string.format("%s (%s)", name, steamid64), IADM_ECHOCOLOR_TEXT, " has disconnected (", IADM_ECHOCOLOR_ARG2, reason, IADM_ECHOCOLOR_TEXT, ")"
-end, "Player disconnect", "desc", true)
+end, "Player disconnect", "Logs player disconnects", true)
 
 IADM:RegisterLogAction("botkick", function(name, steamid64, reason)
     return IADM_ECHOCOLOR_ARG1, string.format("%s (%s)", name, steamid64), IADM_ECHOCOLOR_TEXT, " has disconnected (", IADM_ECHOCOLOR_ARG2, reason, IADM_ECHOCOLOR_TEXT, ")"
-end, "Bot kicks", "desc", false)
+end, "Bot kicks", "Logs player bots being kicked", false)
 
 gameevent.Listen("player_disconnect")
 IADM:AddHook("player_disconnect", "LogPlayerDisonnect", function(data)
@@ -395,7 +395,7 @@ end)
 
 IADM:RegisterLogAction("plrusetool", function(pl, tool)
     return IADM_ECHOCOLOR_ARG1, pl, IADM_ECHOCOLOR_TEXT, " used tool ", IADM_ECHOCOLOR_ARG2, tool
-end, "Use tool", "desc", true)
+end, "Use tool", "Logs players using their tool via toolgun", true)
 
 IADM:AddHook("CanTool", "LogToolgunUse", function(tbl, pl, tr, toolname, tool, button)
     if !IsLogEnabled("plrusetool") then return end

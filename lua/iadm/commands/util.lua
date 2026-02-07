@@ -1,4 +1,8 @@
 local cmd = IADM:AddCommand("kick", function(caller, target, reason)
+    if target:IsListenServerHost() then
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "This target is invulnerable!")
+        return
+    end
     reason = reason or "No reason provided"
 	
 	local nick = IsValid(caller) and caller:Nick() or "Console"
@@ -25,7 +29,7 @@ local cmd = IADM:AddCommand("ban", function(caller, target, duration, reason)
     if success then
         IADM:MessageWPrefix(caller, true, Color(255,0,0), target:Nick(), IADM_ECHOCOLOR_TEXT, " was ", Color(255,0,0), "banned", IADM_ECHOCOLOR_TEXT, "! (", Color(255,128,0), reason, IADM_ECHOCOLOR_TEXT, ")")
     else
-        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, err, "!")
+        IADM:MessageWPrefix(caller, true, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, err)
     end
 end)
 cmd.Name = "Ban"

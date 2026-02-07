@@ -1,6 +1,11 @@
 # Changelogs for IADM
 
 
+## v0.4 real (#28)
++ Added missing descriptions for certain log types.
+
+/ Trying to kick a listen server host owner will result in error now
+
 ## v0.4 (#27)
 + Added TIME ARGType, now made it fully functional.
 
