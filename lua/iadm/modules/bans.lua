@@ -56,7 +56,7 @@ function IADM:AddBan(id64, reason, duration, bannedby)
 
     local dbname = IADM.DatabaseDir.."_bans"
     local bannedusername = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", id64)
-	if bannedusername then
+	if bannedusername and bannedusername[1] then
 		bannedusername = bannedusername[1].name
 	end
     local banname = sql.QueryTyped("SELECT * FROM iadm_users WHERE id64=? LIMIT 1", bannedby)
@@ -92,16 +92,7 @@ function IADM:AddBan(id64, reason, duration, bannedby)
             tbl.bannedby,
             tbl.bannedbyname
         )
-		
-		print(id64, type(id64))
-		print(tbl.name, type(tbl.name))
-		print(tbl.banstart, type(tbl.banstart))
-		print(tbl.banend, type(tbl.banend))
-		print(tbl.duration, type(tbl.duration))
-		print(tbl.reason, type(tbl.reason))
-		print(tbl.bannedby, type(tbl.bannedby))
-		print(tbl.bannedbyname, type(tbl.bannedbyname))
-		
+				
 		game.ConsoleCommand(string.format("banid %d %s \"%s\"\n", math.ceil(duration/60), util.SteamIDFrom64(id64), reason))
 		RunConsoleCommand("writeid")
     end

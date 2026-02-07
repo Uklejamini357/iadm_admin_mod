@@ -1,11 +1,85 @@
 # Changelogs for IADM
 
 
+## v0.4 (#27)
++ Added TIME ARGType, now made it fully functional.
+
+- Removed the prints for newly banned player. Was meant for development purposes.
+
+/ Changed the text for logging ents. No longer includes ent index.
+
+* Fixed the BanPlayer function. Again.
+
+! At this point, I'd just call it a day and push the whole thing to the main branch.
+
+## fix something (#26)
++ Made it so that IADM will not start if SRLion's hook library is not installed. (kind of)
+
+## v0.4 beta7 (#25)
++ Add localization support
++ Add version command, moved the version text from help command
+
+/ First argument for help command is no longer optional.
+/ HP command args are no longer optional.
+/ Changed the text for command echoes a bit.
+
+* Fixed hp command not displaying the number of health the target had set to.
+* Fixed some of the logs throwing out error, changed them a bit too.
+
+
+## Antilag disable (#24)
++ Entities can now be targetted by using ent name, prefixed with #
+
+- Disable lag detection. It kind of sucks.
+
+## v0.4 beta6 (#23)
++ Added IADM:LogCommandUse function.
+
+/ Command usages now display in chat.
+
+
+## Fixes, Bans module expnsion, lag detection (#22)
++ Added unban command, unbans the target (specified by SteamID64)
++ Banned players will now load after server initializes.
++ Time format for ban message now works properly.
++ Added Lag detection (Which sucks currently btw.)
+
+/ Change the clientside initialization messages a bit
+/ If a player's ban duration expires, unban them from the server. Also unbans the player if they attempt to rejoin with a still existing, but expired ban. (This is to avoid already banned players from being unable to join back past their bantime expiration.)
+
+* Fixed 5 commands not working when executing from server console. These include: kick, ban, cleanup, map, restart.
+
+
+## Fix (#21)
++ Add "current" option in arg #1 for monitorlogs command, lists currently monitoring logs
+
+* Fixed the error for ply:IsAdmin() and ply:IsSuperAdmin() if the player's usergroup is invalid
+* Fixed the data sync upon join
+
+## Commands (#20)
++ Add "list" option in arg #1 for monitorlogs command
+
+/ Monitorlogs command arguments are no longer optional.
+/ And something else
+
+
+## Fix (#19)
+* Fixed something in LogAction function (i don't remember anymore)
+
+
 ## v0.4 beta5 (#18)
 + IMPROVED THE LOGGING SYSTEM!
 
+/ Fixed the rounding error with timestamps for status command
+/ IADM:Message printing to console can now display player names only.
+
+* Fixed help command
+* Fixed lua error for entinfo if ent:GetActiveWeapon() function is nil 
+* Fixed being unable to add new usergroups from server console
+* Fixed being unable to add new user to a new usergroup
+* Fixed player_connect and player_disconnect hooks in sv_net.lua
+
 ! These fixes are especially related to running on dedicated server. Expect another commit to have more fixes related to this addon on dedicated server.
-! Also, too lazy to add proper changelogs here. Will edit it in next commit.
 
 ## v0.4 beta4 (#17)
 + Status command now also displays on which operating system the server runs on.

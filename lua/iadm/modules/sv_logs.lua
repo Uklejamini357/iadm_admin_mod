@@ -28,17 +28,18 @@ function IADM:LogAction(action, ...)
     local str = ""
 	for id,txt in pairs(strtbl) do
 		if !isstring(txt) then
-			local ply = txt -- might be player
-			if IsValid(ply) then
+			local ent = txt -- might be entity or player
+			if IsValid(ent) then
 				local s
-				if ply:IsPlayer() then
-					if ply:IsBot() then
-						s = string.format("%s (%s)", ply:Nick(), ply:EntIndex())
+				if ent:IsPlayer() then
+					if ent:IsBot() then
+						s = string.format("%s (%s)", ent:Nick(), ent:EntIndex())
 					else
-						s = string.format("%s (%s)", ply:Nick(), ply:GetIADMSteamID64())
+						s = string.format("%s (%s)", ent:Nick(), ent:GetIADMSteamID64())
 					end
 				else
-					s = string.format("%s [%d]", ply:GetClass(), ply:EntIndex())
+					-- s = string.format("%s [%d]", ent:GetClass(), ent:EntIndex())
+					s = ent:GetClass()
 				end
 
 				strtbl[id] = s
@@ -50,10 +51,10 @@ function IADM:LogAction(action, ...)
 	end
 
 	
-	local dontlog = IADM.LastLogAction == action and IADM.LastLogStr == str and IADM.LastLogTime and IADM.LastLogTime+5 > os.time()
+	local dontlog = self.LastLogAction == action and self.LastLogStr == str and self.LastLogTime and self.LastLogTime+5 > os.time()
 	local doprint = not dontlog
 	local thetbl
-	for i,tbl in ipairs(IADM.LogTick) do
+	for i,tbl in ipairs(self.LogTick) do
 		if table.HasValue(tbl, str) then
 			thetbl = tbl
 			doprint = false
@@ -78,16 +79,16 @@ function IADM:LogAction(action, ...)
 
 
 	local function printmonitorloggers()
-		for ply,monitoringtbl in pairs(IADM.MonitorLog) do
-			if !IsValid(ply) then IADM.MonitorLog[ply] = nil continue end
+		for ply,monitoringtbl in pairs(self.MonitorLog) do
+			if !IsValid(ply) then self.MonitorLog[ply] = nil continue end
 			if monitoringtbl == "all" or table.HasValue(monitoringtbl, action) then
-				IADM:Message(ply, false, thetbl and unpack(thetbl.args) or unpack(strtbl))
+				self:Message(ply, false, thetbl and unpack(thetbl.args) or unpack(strtbl))
 			end
 		end
 	end
 
     local timerhandler = "IADM.LogTickTimer"
-    for i,tbl in ipairs(IADM.LogTick) do
+    for i,tbl in ipairs(self.LogTick) do
         timer.Create(timerhandler, 0, 1, function()
             sql.QueryTyped("UPDATE iadm_logs SET count=? WHERE id=?",
                 tbl.count,
@@ -106,8 +107,8 @@ function IADM:LogAction(action, ...)
 				table.insert(thetbl.args, ")")
 			end
 
-			IADM.RecentLogs[tbl.recentlogid].count = thetbl.count
-			IADM.RecentLogs[tbl.recentlogidaction].count = thetbl.count
+			self.RecentLogs[tbl.recentlogid].count = thetbl.count
+			self.RecentLogs[tbl.recentlogidaction].count = thetbl.count
 			
 			printmonitorloggers()
 			
@@ -115,7 +116,7 @@ function IADM:LogAction(action, ...)
 			MsgC(unpack(thetbl.args))
 			MsgN()
 
-            table.Empty(IADM.LogTick)
+            table.Empty(self.LogTick)
             timer.Remove(timerhandler)
         end)
 
@@ -130,20 +131,20 @@ function IADM:LogAction(action, ...)
         str = str,
         time = os.time(),
         count = 1,
-		recentlogid = #IADM.RecentLogs,
-		recentlogidaction = #IADM.RecentLogsByAction[action]
+		recentlogid = #self.RecentLogs,
+		recentlogidaction = #self.RecentLogsByAction[action]
     }
-    table.insert(IADM.LogTick, t)
+    table.insert(self.LogTick, t)
 
 
 	if dontlog then
-		IADM.LastLogCount = IADM.LastLogCount + 1
+		self.LastLogCount = self.LastLogCount + 1
 		
-		IADM.RecentLogs[IADM.LastLogRecentId].count = IADM.RecentLogs[IADM.LastLogRecentId].count + 1
-		IADM.RecentLogsByAction[action][IADM.LastLogRecentIdAction].count = IADM.RecentLogsByAction[action][IADM.LastLogRecentIdAction].count + 1
+		self.RecentLogs[self.LastLogRecentId].count = self.RecentLogs[self.LastLogRecentId].count + 1
+		self.RecentLogsByAction[action][self.LastLogRecentIdAction].count = self.RecentLogsByAction[action][self.LastLogRecentIdAction].count + 1
 		sql.QueryTyped("UPDATE iadm_logs SET count=? WHERE id=?",
-			IADM.LastLogCount,
-			IADM.LastLogSQLId
+			self.LastLogCount,
+			self.LastLogSQLId
 		)
 	else
 		sql.QueryTyped("INSERT INTO iadm_logs(action, str, time, count) "..
@@ -153,25 +154,25 @@ function IADM:LogAction(action, ...)
 			os.time(),
 			1
 		)
-		IADM.LastLogTime = os.time()
-		IADM.LastLogCount = 1
-		IADM.LastLogRecentId = #IADM.RecentLogs
-		IADM.LastLogRecentIdAction = #IADM.RecentLogsByAction[action]
+		self.LastLogTime = os.time()
+		self.LastLogCount = 1
+		self.LastLogRecentId = #self.RecentLogs
+		self.LastLogRecentIdAction = #self.RecentLogsByAction[action]
 	end
 	
-	IADM.LastLogAction = action
-	IADM.LastLogStr = str
+	self.LastLogAction = action
+	self.LastLogStr = str
 
     local id = sql.QueryTyped("SELECT id FROM iadm_logs ORDER BY id DESC LIMIT 1")
     if id and id[1] then
         t.id = id[1].id
-		IADM.LastLogSQLId = t.id
+		self.LastLogSQLId = t.id
     end
 
     timer.Create(timerhandler, 0, 1, function()
 		printmonitorloggers()
 
-        table.Empty(IADM.LogTick)
+        table.Empty(self.LogTick)
         timer.Remove(timerhandler)
     end)
 end

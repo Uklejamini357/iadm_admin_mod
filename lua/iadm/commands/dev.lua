@@ -31,3 +31,12 @@ cmd.ChatArg = true
 cmd.PowerLevelReq = IADM_GROUP_POWER_ADMIN
 cmd:AddArgument({type=IADM_ARGTYPE_ENTS, default="@"})
 
+/*
+local cmd = IADM:AddCommand("test", function(caller, test)
+    IADM:Message(caller, true, IADM_ECHOCOLOR_TEXT, "Returned value: ", IADM_ECHOCOLOR_ARG1, test)
+end)
+cmd.Name = "Test command"
+cmd.Desc = "time"
+cmd.PowerLevelReq = IADM_GROUP_POWER_GODMODE
+cmd:AddArgument({type=IADM_ARGTYPE_TIME})
+*/

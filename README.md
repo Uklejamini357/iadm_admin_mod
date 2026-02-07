@@ -70,29 +70,24 @@ If you're on a local listen server, you can simply use "iadm_god_mode" commmand 
 > Note: This roadmap may not be 100% accurate.
 
 
-v0.3: (DONE)
-- Add SQL database
-- Add UserGroups management
-- Override ply:IsAdmin() and ply:IsSuperAdmin() functions
-- Make lower ranked players unable to target commands on higher ranked players
-- Add OverrideCanTarget and CanTarget extensive functionality
-- Add data sync
-- Implement more commands
-
-v0.4: (CURRENT)
-- Add logging system (WIP)
+v0.4: (DONE)
+- Add logging system (Pretty much done)
 - Make addon more configurable with the config table (DONE)
 - More commands (viewlogs, viewfulllogs, deletelogs, monitorlogs)
 
-v0.5:
+v0.5: (NEXT)
 - Add ChatFilter module
 - Make non-required modules toggleable
 - Expand and Improve moderation actions
-- More commands (mute, chatmite, vcmute, togglemodule)
+- Add more configurables
+- More commands (mute, chatmute, vcmute, togglemodule)
+
 v0.6:
 - Add Whitelist module
 - Add SandboxUtils module
+- Improve logging system
 
 v0.7:
 - Add votes module
 - Add MOTD module
+- Improve echoes

@@ -427,7 +427,48 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
             args[count] = a
         elseif carg.type == IADM_ARGTYPE_TIME then
-            a = tonumber(a)
+            local calculated = 0
+            local s = ""
+            local last_time_type = 1
+            local b = {
+                {"y", 86400*365},
+                {"w", 86400*7},
+                {"d", 86400},
+                {"h", 3600},
+                {"m", 60},
+                {"s", 1}
+            }
+
+            local len = #a
+            for i=1,len do
+                if tonumber(a[i]) then
+                    s = s..a[i]
+
+                    if i == len then
+                        calculated = calculated + tonumber(s)
+                        break
+                    end
+
+                    continue
+                else
+                    for c=last_time_type,#b do
+                        if b[c][1] == a[i] then
+                            calculated = calculated + (b[c][2] * tonumber(s))
+                            last_time_type = c+1
+                            s = ""
+
+                            break
+                        end
+                    end
+
+                    continue
+                end
+
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Invalid format!")
+                return
+            end
+
+            a = tonumber(calculated)
             if a then
                 if carg.min then
                     a = math.max(carg.min, a)
@@ -948,22 +989,7 @@ concommand.Add("iadm_changelogs", function(pl)
     local col_warn = Color(255, 0, 0)
     local col_change = Color(255, 255, 120)
     local col_fix = Color(86, 209, 239)
-    local change_notes = [[## v0.4 beta1 (#13)
-+ Added logs module, a real-time logging module tracking player actions. Currently it logs the following:
-player deaths, player connect, player disconnect, player say,
-spawnprop, spawnragdoll, spawneffect, spawnnpc, spawnsent, spawnvehicle, spawnswep, giveswep,
-toolgun usage
-+ Add viewlogs command, lets you view recently logged events that took place in current session
-+ Added 3 global echocolors, mostly for logging.
-
-/ Changed Godmode text a bit
-
-* Fixed suggesting unavailable commands upon attempting to run an unknown command
-* Fixed groups module not working as intended
-* Fixed being able to delete "user" group
-
-! WARNING: Srlion's Hook Library is required for this module, otherwise expect lua errors and logging events failing!
-]]
+    local change_notes = [[! Too much to log it all]]
 
     local tbl = {}
     for i,v in pairs(string.Explode("\n", change_notes)) do
