@@ -1,5 +1,14 @@
 # Changelogs for IADM
 
+## v0.4.1 (#29)
++ Added 1 new global for color
+
+/ Change how the modules load
+/ Updated documentation.
+/ Moved IADM.BannedPlayers to MODULE.BannedPlayers in bans module
+
+! Note for lua devs: The only problem is that the modules will not be reloading by themselves whenever edited, as it only returns a function while loading the modules.
+
 
 ## v0.4 real (#28)
 + Added missing descriptions for certain log types.

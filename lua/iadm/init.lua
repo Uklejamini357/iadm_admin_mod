@@ -7,7 +7,6 @@ if not IADM then
     IADM.SQLDatabases = {}
     IADM.SQLDatabasesLoad = {}
 
-    IADM.BannedPlayers = {}
     IADM.DatabaseDir = "iadm"
 
     IADM.RegisteredSyncData = {}
@@ -15,8 +14,8 @@ if not IADM then
 end
 
 IADM.Prefix = {"!", "/"}
-IADM.Version = "0.4"
-IADM.UpdateVer = 28
+IADM.Version = "0.4.1"
+IADM.UpdateVer = 29
 IADM.Author = "Uklejamini"
 
 local IADM = IADM
@@ -135,6 +134,10 @@ function IADM:GetConfigCategoryTableByName(name)
     end
 
     return {}
+end
+
+function IADM:GetModuleTable(id)
+    return IADM.Modules[id]
 end
 
 
@@ -321,7 +324,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if args[count] == "" then
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "String cannot be empty!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "String cannot be empty!")
                 return
             end
 
@@ -354,8 +357,8 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                         s=s..(i == 1 and nick or ", "..nick)
                     end
                     IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ",
-                    Color(255,128,0), Format("Too many players (%d) to select from! ", #tbl), Color(255,255,0), "Select from:\n",
-                    Color(255,128,0), s)
+                    IADM_ECHOCOLOR_ERROR_REASON, Format("Too many players (%d) to select from! ", #tbl), IADM_ECHOCOLOR_ERROR_HINT, "Select from:\n",
+                    IADM_ECHOCOLOR_ERROR_REASON, s)
                     return
                 end
 
@@ -363,7 +366,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if isstring(a) or !IsValid(a) or !a:IsPlayer() then
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Player not found!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "Player not found!")
                 return
             end
 
@@ -406,7 +409,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             end
 
             if isstring(a) or !istable(a) and !IsValid(a) then
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Could not find an entity!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "Could not find an entity!")
                 return
             end
 
@@ -422,7 +425,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                     a = math.min(carg.max, a)
                 end
             else
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Invalid number!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid number!")
                 return
             end
             args[count] = a
@@ -464,7 +467,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                     continue
                 end
 
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Invalid format!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid format!")
                 return
             end
 
@@ -484,7 +487,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
             args[count] = a
         elseif carg.type == IADM_ARGTYPE_STR then
             if a == "" then
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "String cannot be empty!")
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "String cannot be empty!")
                 return
             end
         end
@@ -506,7 +509,7 @@ function IADM:ProcessCfgArgs(pl, ctbl, str)
                 str = math.min(ctbl.max, str)
             end
         else
-            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", Color(255,128,0), "Invalid number!")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid number!")
             return
         end
     elseif ctbl.ConfigType == IADM_ARGTYPE_BOOL then
@@ -515,12 +518,12 @@ function IADM:ProcessCfgArgs(pl, ctbl, str)
         elseif str=="false" or str=="0" then
             str = false
         else
-            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", Color(255,128,0), "Invalid value! Use true/false or 1/0!")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid value! Use true/false or 1/0!")
             return
         end
     elseif ctbl.ConfigType == IADM_ARGTYPE_STR then
         if str == "" then
-            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", Color(255,128,0), "String cannot be empty!")
+            IADM:Message(pl, false, IADM_ECHOCOLOR_ERROR, "Error: ", IADM_ECHOCOLOR_ERROR_REASON, "String cannot be empty!")
             return
         end
     end
@@ -644,7 +647,7 @@ concommand.Add("iadm", function(pl, cmd, args, str)
             if arg.optional then
                 args[count] = nil
             else
-                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", Color(255,128,0), "Invalid choice! You used ", IADM_ECHOCOLOR_ERROR_REASON, args[count])
+                IADM:Message(pl, inchat, IADM_ECHOCOLOR_ERROR, "Arg #", IADM_ECHOCOLOR_ERROR_ARGVAR, count, IADM_ECHOCOLOR_ERROR, " error: ", IADM_ECHOCOLOR_ERROR_REASON, "Invalid choice! You used ", IADM_ECHOCOLOR_ERROR_REASON, args[count])
                 return
             end
         end
@@ -989,7 +992,15 @@ concommand.Add("iadm_changelogs", function(pl)
     local col_warn = Color(255, 0, 0)
     local col_change = Color(255, 255, 120)
     local col_fix = Color(86, 209, 239)
-    local change_notes = [[! Too much to log it all]]
+    local change_notes = [[## v0.4.1 (#29)
++ Added 1 new global for color
+
+/ Change how the modules load
+/ Updated documentation.
+/ Moved IADM.BannedPlayers to MODULE.BannedPlayers in bans module
+
+! Note for lua devs: The only problem is that the modules will not be reloading by themselves whenever edited, as it only returns a function while loading the modules.
+]]
 
     local tbl = {}
     for i,v in pairs(string.Explode("\n", change_notes)) do
