@@ -11,17 +11,18 @@ Please keep in mind that IADM is in early development stage and may still have i
 The commands are one of the key elements to this admin mod. These allow users, especially admins to execute specific action on the server. 
 
 ### CORE
-- iadm help [command] - Shows instructions for the specified command. If not specified, shows the intro command.
+- iadm help [command] - Shows instructions for the specified command.
 - iadm status - Displays server information (Uptime, players, current map and gamemode)
+- iadm version - Displays message with admin mod version.
 
 ### Dev
 - [!] iadm lua [string] - Executes a lua code on the server.
 - iadm entinfo [ent] - Gets information about the targetted entity (classname, hp/maxhp, weapon + ammo)
 
 ### Fun
-- iadm kill [players] - Kills targets.
+- iadm kill [players] - Kills targets. (Alias: slay)
 - iadm explode [players] [explosionlevel default=1] - Explodes players. Higher values result in much more violent explosion.
-- iadm skill [players] - Silently kills targets.
+- iadm skill [players] - Silently kills targets. (Alias: sslay)
 - iadm strip [players] - Removes weapons for the target(s).
 - iadm hp [players] [hp] - Sets target(s) health to the specified amount.
 - iadm ignite [entities] [duration default=300] - Ignites targets.
@@ -42,19 +43,22 @@ The commands are one of the key elements to this admin mod. These allow users, e
 - iadm monitorlogs [logtype] [toggle {on/off}] - Monitors logs. This command does not work for server host or server console.
 
 ### Teleport
-- iadm teleport [player] - Teleports a player
-- iadm goto [player] - Teleports to a player.
-- iadm bring [players] - Changes usergroup's attribute.
+- iadm teleport [player] - Teleports a player to the position under your crosshair. (Aliases: tele, tp)
+- iadm goto [player] - Teleports you to a specified player.
+- iadm bring [players] - Brings players to you.
 
 ### Util
 - iadm kick [player] [reason] - Kicks a player.
-- iadm ban [player] [time] [reason] - Bans a player for specified amount of time.
+- iadm ban [player] [time, 0=permanent] [reason] - Bans a player for specified amount of time.
+- iadm unban [steamid64] [reason] - Unbans player's Steam ID64.
 - iadm csay [text] - Displays a text on the center screen to everyone.
 - iadm tsay [text] - Displays a chat message to everyone.
 - iadm noclip [player] - Toggles noclip for the target.
-- iadm map [map] - Cleans up the map.
+- iadm cleanup - Cleans up the map.
+- iadm map [map] - Switches the map to another one.
 - iadm restart - Restarts the map.
-- iadm [player] - Prints out a player's steamid.
+- iadm steamid [player] - Prints out a player's steamid.
+- iadm cleardecals - Cleans up all clientside ragdolls and decals for everyone.
 
 ## 2. Config
 Configuring the can be quite complex. Currently, it's quite limited too. In future there may be more configuration options.<br><br>

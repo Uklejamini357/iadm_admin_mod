@@ -35,20 +35,45 @@ if CLIENT then
 end
 
 
+local modulestoenable = {}
 files = file.Find("iadm/modules/*.lua", "LUA", "sortasc")
 for _,name in ipairs(files) do
     if string.StartsWith(name, "sv_") then continue end
     IADM_MODULE_SHOULDINCLUDE = true
     AddCSLuaFile("iadm/modules/"..name)
-    local MODULE = include("iadm/modules/"..name)
-    if MODULE then
-        MODULE.ID = string.sub(name, 1, -5)
-        MODULE.Included = tobool(IADM_MODULE_SHOULDINCLUDE)
+    MODULE = {}
+    local MOD, MODFUNC = include("iadm/modules/"..name)
+    local SVMODFUNC
+
+    IADM.Modules[MODULE.ID:lower()] = MODULE
+
+    if MOD then
+        MOD.ID = string.sub(name, 1, -5)
+        MOD.Included = tobool(IADM_MODULE_SHOULDINCLUDE)
     end
     if SERVER and file.Exists("iadm/modules/sv_"..name, "LUA") then
-        include("iadm/modules/sv_"..name)
+        MODULE = MOD
+        SVMODFUNC = include("iadm/modules/sv_"..name)
+        MODULE = nil
+    end
+
+    if IADM_MODULE_SHOULDINCLUDE or MODULE.Included then
+        table.insert(modulestoenable, {
+            Module = MOD,
+            ModuleFunc = MODFUNC,
+            SVModuleFunc = SVMODFUNC,
+            Priority = MOD.Priority or 10
+        })
     end
     IADM_MODULE_SHOULDINCLUDE = nil
+end
+for _,tbl in ipairs(modulestoenable) do
+    if tbl.ModuleFunc then
+        tbl.ModuleFunc(tbl.Module)
+    end
+    if tbl.SVModuleFunc then
+        tbl.SVModuleFunc(tbl.Module)
+    end
 end
 
 files = file.Find("iadm/commands/*.lua", "LUA", "sortasc")
