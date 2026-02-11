@@ -3,7 +3,7 @@ MODULE.Name = "Hook utils"
 MODULE.Description = "Groups"
 MODULE.Required = true
 
-return MODULE, function(MODULE)
+return function(MODULE)
     IADM:AddHook("PhysgunPickup", "PlayerPickup", function(pl, ent)
         if pl:IsAdmin() and ent:IsPlayer() then
             return true

@@ -3,7 +3,7 @@ MODULE.Name = "Groups"
 MODULE.Description = "Main module for managing groups"
 MODULE.Required = true
 
-return MODULE, function(MODULE)
+return function(MODULE)
     if not IADM.UserGroups then -- default table
         IADM.UserGroups = {
             ["superadmin"] = {powerlevel = IADM_GROUP_POWER_SUPERADMIN, isadmin=true, issuperadmin=true},

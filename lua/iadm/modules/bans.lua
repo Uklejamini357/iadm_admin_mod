@@ -2,7 +2,7 @@ MODULE.ID = "bans"
 MODULE.Name = "Bans"
 MODULE.Description = "Module for managing user bans"
 
-return MODULE, function(MODULE)
+return function(MODULE)
     if not MODULE.BannedPlayers then
         MODULE.BannedPlayers = {}
     end

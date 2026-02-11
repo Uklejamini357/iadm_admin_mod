@@ -42,29 +42,28 @@ for _,name in ipairs(files) do
     IADM_MODULE_SHOULDINCLUDE = true
     AddCSLuaFile("iadm/modules/"..name)
     MODULE = {}
-    local MOD, MODFUNC = include("iadm/modules/"..name)
+    local MODFUNC = include("iadm/modules/"..name)
     local SVMODFUNC
 
     IADM.Modules[MODULE.ID:lower()] = MODULE
 
-    if MOD then
-        MOD.ID = string.sub(name, 1, -5)
-        MOD.Included = tobool(IADM_MODULE_SHOULDINCLUDE)
+    if MODULE then
+        MODULE.ID = string.sub(name, 1, -5)
+        MODULE.Included = tobool(IADM_MODULE_SHOULDINCLUDE)
     end
     if SERVER and file.Exists("iadm/modules/sv_"..name, "LUA") then
-        MODULE = MOD
         SVMODFUNC = include("iadm/modules/sv_"..name)
-        MODULE = nil
     end
 
     if IADM_MODULE_SHOULDINCLUDE or MODULE.Included then
         table.insert(modulestoenable, {
-            Module = MOD,
+            Module = MODULE,
             ModuleFunc = MODFUNC,
             SVModuleFunc = SVMODFUNC,
-            Priority = MOD.Priority or 10
+            Priority = MODULE.Priority or 10
         })
     end
+    MODULE = nil
     IADM_MODULE_SHOULDINCLUDE = nil
 end
 for _,tbl in ipairs(modulestoenable) do
