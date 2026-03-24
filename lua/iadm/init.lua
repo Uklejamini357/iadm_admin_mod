@@ -345,7 +345,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                     if ply:Nick() == v then
                         tbl = {ply}
                         break
-                    elseif string.find(string_lower(ply:Nick()), string_lower(v)) then
+                    elseif string.find(string_lower(ply:Nick()), string_lower(v), 1, true) then
                         table.insert(tbl, ply)
                     end
                 end
@@ -399,7 +399,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
                     end
                 else
                     for _,ply in ipairs(player.GetAll()) do
-                        if string.find(string_lower(ply:Nick()), string_lower(v)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
+                        if string.find(string_lower(ply:Nick()), string_lower(v), 1, true) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
                             table.insert(tbl, ply)
                         end
                     end
@@ -444,6 +444,7 @@ function IADM:ProcessCmdArgs(pl, inchat, ctbl, args)
 
             local len = #a
             for i=1,len do
+                if tonumber(v) and tonumber(v) <= 0 then calculated = v break end
                 if tonumber(a[i]) then
                     s = s..a[i]
 
@@ -720,7 +721,7 @@ end, function(cmd, argstr, args)
                             add_to_results(str..s..(string.format("\"%s\"", pl:Nick())))
                         else
                             for _,ply in ipairs(player.GetAll()) do
-                                if string.find(string_lower(ply:Nick()), string_lower(arg)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
+                                if string.find(string_lower(ply:Nick()), string_lower(arg), 1, true) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
                                     add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
                                 end
                             end
@@ -897,88 +898,6 @@ end, function(cmd, argstr, args)
     local arg2 = string_lower(args[2] or "")
     local ctbl = IADM.Config[arg1]
 
---[[
-
-    local next = string.sub(argstr, -1, -1) == " " and 1 or 0
-    local currentarg = #args + next
-
-    local islast = true
-    local function add_to_results(...)
-        if islast then
-            table.insert(t, ...)
-        end
-    end
-
-    if ctbl and currentarg >= 2 then
-        local i = false
-        local s = ""
-        local str
-        for count,carg in ipairs(ctbl.Options) do
-            if count >= currentarg then break end
-
-            if !str then
-                str = cmd.." "..arg1..s
-            end
-            s = s.." "
-
-            local arg = args[count + 1]
-            islast = (count+1)==currentarg
-
-            if (count+1) == currentarg then
-                if arg then
-                    -- s = s..arg
-
-                    if carg.type == IADM_ARGTYPE_STR then
-                       s = s..arg
-                       add_to_results(str..s)
-                    elseif carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                        if arg == "^" then
-                            add_to_results(str..s..(string.format("\"%s\"", pl:Nick())))
-                        else
-                            for _,ply in ipairs(player.GetAll()) do
-                                if string.find(string_lower(ply:Nick()), string_lower(arg)) and IADM:CmdCanTarget(pl, ply, ctbl, carg) then
-                                    add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
-                                end
-                            end
-                        end
-                        -- break
-                    end
-                else
-                    if carg.type == IADM_ARGTYPE_PLR or carg.type == IADM_ARGTYPE_PLRS then
-                        for _,ply in ipairs(player.GetAll()) do
-                            if !IADM:CmdCanTarget(pl, ply, ctbl, carg) then continue end
-                            add_to_results(str..s..(string.format("\"%s\"", ply:Nick())))
-                        end
-                        -- break
-                    else
-                        local defaulthint = carg.type == IADM_ARGTYPE_NUM and "number" or carg.type == IADM_ARGTYPE_BOOL and "true/false" or "string"
-                    
-                        s = s ..((args[count + 1] or (carg.optional and string.format("[%s]", carg.hint or defaulthint) or string.format("<%s>", carg.hint or defaulthint))..
-                        (carg.type == IADM_ARGTYPE_BOOL and " [1/0, true/false]" or "")))
-                        add_to_results(str..s)
-                    end
-                end
-            end
-
-            if args[count+1] and not (carg.type == IADM_ARGTYPE_NUM and carg.type == IADM_ARGTYPE_BOOL) then
-                args[count+1] = "\""..args[count+1].."\""
-            end
-
-            if arg then
-                s=s..arg
-            end
-        end
-    elseif currentarg < 2 then
-        local times = 0
-        for k,_ in pairs(IADM.Config) do
-            if string.sub(k, 1, #arg1) ~= arg1 then continue end
-            if !IADM:CanUseCommand(pl, k) then continue end
-            add_to_results(cmd.." "..k)
-            if times >= 50 then break end
-        end
-    end
-
-]]
     return t
 end, "nil", 0)
 

@@ -6,7 +6,7 @@ local cmd = IADM:AddCommand("kill", function(caller, targets)
 
         ply:Kill()
     end
-	
+
 	IADM:LogCommandUse(caller, "#A killed #T", false, targets)
 end)
 cmd.Name = "Kill"
